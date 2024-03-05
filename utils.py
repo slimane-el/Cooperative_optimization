@@ -65,4 +65,4 @@ def get_agents_from_pickle(pickle_name, a, n, m):
     # plt.ylabel('y')
     # plt.show()
 
-    return agent_x, agent_y
+    return agent_x, agent_y, selected_points, x_selected, y_selected
