@@ -22,7 +22,7 @@ def kernel_im(xi, xm):
     # Euclidean Kernel
     # xi is a vector and xm is a list of vector
     n = len(xm)
-    K = np.zeros(n)
+    K = np.zeros((n, 1))
     for j in range(n):
         K[j] = np.exp(-np.linalg.norm(xi-xm[j])**2)
     return K
@@ -36,6 +36,7 @@ def compute_alpha(x, y, x_selected, sigma):
     alpha_exact = np.linalg.inv(
         sigma**2*Kmm + np.eye(m) + np.transpose(Knm) @ Knm) @ np.transpose(Knm) @ y[0:n]
     return alpha_exact
+
 
 def get_agents_from_pickle(pickle_name, a, n, m):
     # summary :
@@ -65,4 +66,16 @@ def get_agents_from_pickle(pickle_name, a, n, m):
     # plt.ylabel('y')
     # plt.show()
 
-    return agent_x, agent_y
+    return agent_x, agent_y, x_selected, y_selected
+
+
+def grad_alpha(sigma, mu, y_agent, x_agent, x_selected, alpha):
+    Kmm = kernel_matrix(x_selected, x_selected)
+    a = len(x_agent)
+    grad = [0 for i in range(a)]
+    for i in range(a):
+        grad[i] = (sigma**2*Kmm @ alpha[i] + mu*np.tranpose(alpha[i]))/a
+        for j in range(len(x_agent[i])):
+            grad[i] += - y_agent[i][j]*kernel_im(x_agent[i][j], x_selected) + (
+                kernel_im(x_agent[i][j], x_selected)) @ np.tranpose(kernel_im(x_agent[i][j], x_selected)) @ alpha[i]
+    return grad
