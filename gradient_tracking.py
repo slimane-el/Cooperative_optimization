@@ -6,12 +6,21 @@ if __name__ == "__main__":
     with open('first_database.pkl', 'rb') as f:
         x, y = pickle.load(f)
 
+    print(x)
+    print(x[0])
+    test = kernel_im(x[0], x)
+    print(type(test))
+    print(test.shape)
+    # print(np.expand_dims(test, axis=1).shape)
+    print((test@np.transpose(test)).shape)
+    # print(np.transpose(np.expand_dims(test, axis=1)) @ np.expand_dims(test, axis=1).shape)
+
     # # Data visualization
     # plt.plot(x, y, 'o', label='Data')
     # plt.xlabel('x')
     # plt.ylabel('y')
     # plt.show()
-        
+    """
     # Generate the data
     a = 5
     n = 100
@@ -36,3 +45,5 @@ if __name__ == "__main__":
     plt.show()
     Adj = nx.adjacency_matrix(Gx).todense()
     print(Adj)
+
+    """

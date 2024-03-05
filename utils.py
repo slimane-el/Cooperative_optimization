@@ -22,7 +22,7 @@ def kernel_im(xi, xm):
     # Euclidean Kernel
     # xi is a vector and xm is a list of vector
     n = len(xm)
-    K = np.zeros(n)
+    K = np.zeros((n, 1))
     for j in range(n):
         K[j] = np.exp(-np.linalg.norm(xi-xm[j])**2)
     return K
