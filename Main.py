@@ -1,5 +1,8 @@
- 
-
+import numpy as np
+import matplotlib.pyplot as plt
+import pickle
+import networkx as nx
+from utils import kernel_matrix, kernel_im
 
 # Load the data
 with open('first_database.pkl', 'rb') as f:
@@ -39,20 +42,9 @@ Kmm = kernel_matrix(x_selected, x_selected)
 Knm = kernel_matrix(x[0:n], x_selected)
 # alpha_optim using cvxpy
 # Define the optimization variable
-alpha = cp.Variable(m)
 sigma = 0.5
-a1 = sigma**2/2
-# Define the objective
-objective = cp.Minimize(a1*cp.quad_form(alpha, Kmm) +
-                        0.5*cp.power(cp.norm(y[0:n] - Knm@alpha, 2), 2)+0.5*cp.power(cp.norm(alpha, 2), 2))
-# optimize
-prob = cp.Problem(objective)
-prob.solve()
-alpha_optim = alpha.value
-
 alpha_exact = np.linalg.inv(
     sigma**2*Kmm + np.eye(m) + np.transpose(Knm) @ Knm) @ np.transpose(Knm) @ y[0:n]
-print("the alpha optimal is :", alpha_optim)
 print("the alpha exact is :", alpha_exact)
 # define the graph connection of the agents (a undirected star graph for now):
 Gx = nx.star_graph(a-1).to_undirected()
