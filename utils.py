@@ -26,3 +26,43 @@ def kernel_im(xi, xm):
     for j in range(n):
         K[j] = np.exp(-np.linalg.norm(xi-xm[j])**2)
     return K
+
+
+def compute_alpha(x, y, x_selected, sigma):
+    n = len(x)
+    m = len(x_selected)
+    Kmm = kernel_matrix(x_selected, x_selected)
+    Knm = kernel_matrix(x[0:n], x_selected)
+    alpha_exact = np.linalg.inv(
+        sigma**2*Kmm + np.eye(m) + np.transpose(Knm) @ Knm) @ np.transpose(Knm) @ y[0:n]
+    return alpha_exact
+
+def get_agents_from_pickle(pickle_name, a, n, m):
+    # summary :
+    # a : number of agents
+    # n : number of data points
+    # m : number of selected points
+    # pickle_name : name of the pickle file
+    # Load the data
+    with open(pickle_name, 'rb') as f:
+        x, y = pickle.load(f)
+
+    agent_x = []
+    agent_y = []
+    # Randomly select m points
+    # the points should be shared between the different agents
+    selected_points = np.random.choice(np.array(range(n)), m, replace=False)
+    x_selected = x[selected_points]
+    y_selected = y[selected_points]
+    for j in range(a):
+        agent_x.append(x[j*20:j*20+20])
+        agent_y.append(y[j*20:j*20+20])
+
+    # # Data visualization
+    # for j in range(a):
+    #     plt.plot(agent_x[j], agent_y[j], 'o', label='Data')
+    # plt.xlabel('x')
+    # plt.ylabel('y')
+    # plt.show()
+
+    return agent_x, agent_y
