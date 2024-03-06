@@ -1,4 +1,5 @@
 from utils import *
+import time
 
 def gradient_tracking(x, y, x_selected, m, sigma, mu, lr):
     """
@@ -27,25 +28,18 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr):
         The final alpha.
 
     """
+    alpha_list = []
     a = len(x) # number of agents
     # stacked points
-    alpha = [np.arange(m) for i in range(a)] # initial alpha for each agent
-    gradient = [np.arange(m) for i in range(a)] # initial gradient for each agent
+    # initial alpha random with gaussian distribution
+    alpha = np.random.normal(0, 1, (a, m))
     alpha = np.array(alpha).reshape(a*m, 1)
-    gradient = np.array(gradient).reshape(a*m, 1)
-    # print(f'alpha shape : {alpha.shape}')
-    # print(f'gradient shape : {gradient.shape}')
-
+    gradient = grad_alpha(sigma, mu, y, x, x_selected, alpha.reshape(a, m)).reshape(a*m, 1)
     W = 1/a*(np.ones((a, a)))  # define the weight matrix
     # define the kronecker product of the weight matrix
     W_bar = np.kron(W, np.eye(m))
-    # print(f'W_bar shape : {W_bar.shape}')
-    # print(f'W_bar * alpha shape : {(W_bar @ alpha).shape}')
-
-    print()
-    alpha_mean = 1000*np.ones(m)
     j = 0
-    while np.linalg.norm(alpha.reshape(a, m)[0] - alpha_mean) > 0.001 and j<1000:
+    while j<100: # np.linalg.norm(alpha.reshape(a, m)[0] - alpha_mean) > 0.001 and
         j += 1
         # for i in range(a):
         #     alpha[i] = W_bar * alpha[i]+ lr * gradient[i]
@@ -56,12 +50,17 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr):
             grad_alpha(sigma, mu, y, x, x_selected, alpha.reshape(a, m)).reshape(a*m, 1)
         alpha = alpha_new
         alpha_mean = np.mean(alpha.reshape(a, m), axis=0)
-        print(f'alpha mean : {alpha_mean}')
+        alpha_list.append(alpha_mean)
+        print(f'Iteration {j} : {np.linalg.norm(alpha_mean)}')
+    
+    alpha_optim = alpha.reshape(a, m)
+    alpha_optim = np.mean(alpha_optim, axis=0)
 
-    return alpha
+    return alpha_optim, j, alpha_list
 
 if __name__ == "__main__":
-    
+    ALPHA = False
+
     # # Load the data x and y
     with open('first_database.pkl', 'rb') as f:
         x, y = pickle.load(f)
@@ -88,27 +87,50 @@ if __name__ == "__main__":
     # plt.xlabel('x')
     # plt.ylabel('y')
     # plt.show()
-    
+
     # Define the graph connection of the agents (a undirected star graph for now):
     # Gx = nx.star_graph(a-1).to_undirected()
     # nx.draw(Gx, with_labels=True)
     # plt.show()
     # Adj = nx.adjacency_matrix(Gx).todense()
     # print(Adj)
+    if ALPHA == True:
+        # Compute the alpha optimal
+        print("Compute the alpha optimal....")
+        sigma = 0.5
+        start = time.time()
+        alpha_optim = compute_alpha(x , y, x_selected, sigma)
+        end = time.time()
+        print(f'alpha optimal : {alpha_optim}')
+        print(f'Time to compute alpha optimal : {end - start}\n')
 
-    # Compute the alpha optimal
-    print("Compute the alpha optimal....")
-    sigma = 0.5
-    alpha_optim = compute_alpha(x , y, x_selected, sigma)
-    print(f'alpha optimal : {alpha_optim}\n')
+        # Export alpha optimal to a file
+        with open('alpha_optim.pkl', 'wb') as f:
+            pickle.dump(alpha_optim, f)
+
+    else :
+        # Load alpha optimal from a file
+        with open('alpha_optim.pkl', 'rb') as f:
+            alpha_optim = pickle.load(f)
 
     # Compute the alpha optimal with the gradient tracking algorithm
     print("Compute the alpha optimal with the gradient tracking algorithm....")
     sigma = 0.5
-    mu = 0 
-    lr = 0.1
-    alpha_optim_gt = gradient_tracking(agent_x, agent_y, x_selected, m, sigma, mu, lr)
-    print(f'alpha optimal with gradient tracking : {alpha_optim_gt}\n')
+    mu = 0.1 
+    lr = 0.01
+    start = time.time()
+    alpha_optim_gt, tot_ite, alpha_list = gradient_tracking(agent_x, agent_y, x_selected, m, sigma, mu, lr)
+    end = time.time()
+    print(f'alpha optimal with gradient tracking : {alpha_optim_gt}')
+    print(f'Time to compute alpha optimal with gradient tracking : {end - start}')
+    print(f'Total iterations : {tot_ite}\n')
+
+    # Data visualization
+    Y = np.linalg.norm(alpha_list - alpha_optim)
+    plt.plot(Y)
+    plt.xlabel('Iterations')
+    plt.ylabel('Optimality gap (norm)') 
+    plt.show()
     
   
     
