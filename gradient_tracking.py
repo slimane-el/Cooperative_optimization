@@ -33,14 +33,14 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr):
     gradient = [np.arange(m) for i in range(a)] # initial gradient for each agent
     alpha = np.array(alpha).reshape(a*m, 1)
     gradient = np.array(gradient).reshape(a*m, 1)
-    print(f'alpha shape : {alpha.shape}')
-    print(f'gradient shape : {gradient.shape}')
+    # print(f'alpha shape : {alpha.shape}')
+    # print(f'gradient shape : {gradient.shape}')
 
     W = 1/a*(np.ones((a, a)))  # define the weight matrix
     # define the kronecker product of the weight matrix
     W_bar = np.kron(W, np.eye(m))
-    print(f'W_bar shape : {W_bar.shape}')
-    print(f'W_bar * alpha shape : {(W_bar @ alpha).shape}')
+    # print(f'W_bar shape : {W_bar.shape}')
+    # print(f'W_bar * alpha shape : {(W_bar @ alpha).shape}')
 
     print()
     alpha_mean = 1000*np.ones(m)
@@ -52,10 +52,10 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr):
         #     gradient[i] = grad_alpha(x, y, sigma, alpha[i])
         alpha_new = W_bar @ alpha - lr * gradient
         # IMPORTANT : in grad_alpha alpha should be a 2D array
-        gradient = W_bar @ gradient + grad_alpha(sigma, mu, y, x, x_selected, alpha_new.reshape(a, m)) - \
-            grad_alpha(sigma, mu, y, x, x_selected, alpha.reshape(a, m))
+        gradient = W_bar @ gradient + grad_alpha(sigma, mu, y, x, x_selected, alpha_new.reshape(a, m)).reshape(a*m, 1) - \
+            grad_alpha(sigma, mu, y, x, x_selected, alpha.reshape(a, m)).reshape(a*m, 1)
         alpha = alpha_new
-        alpha_mean = np.mean(alpha.reshape(a, m), axis=1)
+        alpha_mean = np.mean(alpha.reshape(a, m), axis=0)
         print(f'alpha mean : {alpha_mean}')
 
     return alpha
@@ -77,37 +77,40 @@ if __name__ == "__main__":
     n = 100
     m = 10
     agent_x, agent_y, selected_points, x_selected, y_selected = get_agents_from_pickle('first_database.pkl', 5, 100, 10)
-    print(x.shape)
-    print(y.shape)
-    print(type(x_selected))
-    print(x_selected.shape)
-    print(x_selected)
+    print(f'Nb agents : {a}')
+    print(f'Nb data points : {n}')
+    print(f'Nb selected points : {m}')
+    print(f'Points per agent : {n/a}\n')
+
+    # Data visualization
+    # for j in range(a):
+    #     plt.plot(agent_x[j], agent_y[j], 'o', label='Data')
+    # plt.xlabel('x')
+    # plt.ylabel('y')
+    # plt.show()
+    
+    # Define the graph connection of the agents (a undirected star graph for now):
+    # Gx = nx.star_graph(a-1).to_undirected()
+    # nx.draw(Gx, with_labels=True)
+    # plt.show()
+    # Adj = nx.adjacency_matrix(Gx).todense()
+    # print(Adj)
 
     # Compute the alpha optimal
+    print("Compute the alpha optimal....")
+    sigma = 0.5
+    alpha_optim = compute_alpha(x , y, x_selected, sigma)
+    print(f'alpha optimal : {alpha_optim}\n')
+
+    # Compute the alpha optimal with the gradient tracking algorithm
+    print("Compute the alpha optimal with the gradient tracking algorithm....")
     sigma = 0.5
     mu = 0 
     lr = 0.1
-    alpha_optim = gradient_tracking(agent_x, agent_y, x_selected, m, sigma, mu, lr)
-
+    alpha_optim_gt = gradient_tracking(agent_x, agent_y, x_selected, m, sigma, mu, lr)
+    print(f'alpha optimal with gradient tracking : {alpha_optim_gt}\n')
     
-    """
-     # Data visualization
-    for j in range(a):
-        plt.plot(agent_x[j], agent_y[j], 'o', label='Data')
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.show()
-
-    # Compute the alpha optimal
-    sigma = 0.5
-    alpha_optim = compute_alpha(x , y, x_selected, sigma)
+  
     
 
-    # define the graph connection of the agents (a undirected star graph for now):
-    Gx = nx.star_graph(a-1).to_undirected()
-    nx.draw(Gx, with_labels=True)
-    plt.show()
-    Adj = nx.adjacency_matrix(Gx).todense()
-    print(Adj)
-
-    """
+    
