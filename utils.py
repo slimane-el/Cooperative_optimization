@@ -77,6 +77,13 @@ def get_agents_from_pickle(pickle_name, a, n, m, plot=False):
 
 
 def grad_alpha(sigma, mu, y_agent, x_agent, x_selected, alpha):
+    # summary :
+    # sigma : float
+    # mu : float
+    # y_agent : list of numpy arrays
+    # x_agent : list of numpy arrays
+    # x_selected : numpy array
+    # alpha : list of numpy arrays
     Kmm = kernel_matrix(x_selected, x_selected)
     a = len(x_agent)
     grad = [0 for i in range(a)] #list of numpy arrays

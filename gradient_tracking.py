@@ -51,9 +51,9 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr):
         #     alpha[i] = W_bar * alpha[i]+ lr * gradient[i]
         #     gradient[i] = grad_alpha(x, y, sigma, alpha[i])
         alpha_new = W_bar @ alpha - lr * gradient
-        # TODO alpha new sous forme de liste ??
-        gradient = W_bar @ gradient + grad_alpha(sigma, mu, y, x, x_selected, alpha_new) - \
-            grad_alpha(sigma, mu, y, x, x_selected, alpha)
+        # IMPORTANT : in grad_alpha alpha should be a 2D array
+        gradient = W_bar @ gradient + grad_alpha(sigma, mu, y, x, x_selected, alpha_new.reshape(a, m)) - \
+            grad_alpha(sigma, mu, y, x, x_selected, alpha.reshape(a, m))
         alpha = alpha_new
         alpha_mean = np.mean(alpha.reshape(a, m), axis=1)
         print(f'alpha mean : {alpha_mean}')
