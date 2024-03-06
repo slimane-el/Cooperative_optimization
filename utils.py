@@ -21,9 +21,10 @@ def kernel_im(xi, xm):
     # Euclidean Kernel
     # xi is a point and xm is a numpy array of points
     n = len(xm)
-    K = np.zeros((n, 1))
+    K = np.zeros((1, n))
     for j in range(n):
-        K[j] = np.exp(-np.linalg.norm(xi-xm[j])**2)
+        K[0][j] = np.exp(-np.linalg.norm(xi-xm[j])**2)
+    # K should be of shape (1,n)
     return K
 
 
@@ -78,12 +79,35 @@ def get_agents_from_pickle(pickle_name, a, n, m, plot=False):
 def grad_alpha(sigma, mu, y_agent, x_agent, x_selected, alpha):
     Kmm = kernel_matrix(x_selected, x_selected)
     a = len(x_agent)
-    grad = [0 for i in range(a)]
+    grad = [0 for i in range(a)] #list of numpy arrays
     for i in range(a):
-        grad[i] = (sigma**2*Kmm @ alpha[i] + mu*np.tranpose(alpha[i]))/a
+        # print(f'alpha[i] shape : {alpha[i].shape}')
+        # print(f'x_agent[i] shape should be n/nb agents (= 20): {x_agent[i].shape}')
+        # print(f'x_selected shape should be m (=10): {x_selected.shape}')
+        big_kernel_im = kernel_matrix(x_agent[i], x_selected)
+        # print(f'big_kernel_im shape (should be 20, 10 ) : {big_kernel_im.shape}')
+        big_kernel_im_transpose = np.transpose(big_kernel_im)
+        # print(f'big_kernel_im_transpose shape : {big_kernel_im_transpose.shape}')
+        grad[i] = (1/a) * (sigma**2 * Kmm + mu * np.eye(len(x_selected))) @ alpha[i] + \
+            big_kernel_im_transpose @ (big_kernel_im @ alpha[i] - y_agent[i])
+        # print(f'grad[i] shape : {grad[i].shape}')
+        
+    return grad
+
+def grad_alpha2(sigma, mu, y_agent, x_agent, x_selected, alpha):
+    Kmm = kernel_matrix(x_selected, x_selected)
+    a = len(x_agent)
+    grad = [0 for i in range(a)] #list of numpy arrays
+    for i in range(a):
+        grad[i] = (sigma**2*Kmm @ alpha[i] + mu*alpha[i]) / a
+        # print(f'\ngrad[i] shape : {grad[i].shape}')
         for j in range(len(x_agent[i])):
-            grad[i] += - y_agent[i][j]*kernel_im(x_agent[i][j], x_selected) + (
-                kernel_im(x_agent[i][j], x_selected)) @ np.tranpose(kernel_im(x_agent[i][j], x_selected)) @ alpha[i]
+            # print(f'kernel_im shape (should be 1, 10 ) : {kernel_im(x_agent[i][j], x_selected).shape}')
+            # print(f'kernel_im_transpose shape (should be 10, 1) : {np.transpose(kernel_im(x_agent[i][j], x_selected)).shape}')
+            # print(f'alpha[i] shape : {alpha[i].shape}')
+            term_toadd = - y_agent[i][j]*np.transpose(kernel_im(x_agent[i][j], x_selected)) + \
+                np.transpose(kernel_im(x_agent[i][j], x_selected)) * (kernel_im(x_agent[i][j], x_selected) @ alpha[i])
+            grad[i] += term_toadd.squeeze()
     return grad
 
 
@@ -100,5 +124,38 @@ if __name__ == "__main__":
     xi = 1
     xm = np.array([1, 1, 1, 1])
     test = kernel_im(xi, xm)
-    print(test.shape == (4, 1))
-    print(test==np.array([[1], [1], [1], [1]]))
+    print(test.shape == (1, 4))
+    print(test)
+
+    # test kernel matrix with x of size 1
+    x = np.array([1])
+    y = np.array([1, 1, 1, 1])
+    test = kernel_matrix(x, y)
+    print(test.shape == (1, 4))
+    print(test)
+
+    x_agent, y_agent, x_selected, y_selected, selected_points = get_agents_from_pickle(
+        'first_database.pkl', a=5, n=100, m=10)
+
+    # test grad_alpha
+    sigma = 0.5
+    mu = 1
+    alpha = [np.zeros(10) for i in range(5)]
+    grad = grad_alpha(sigma, mu, y_agent, x_agent, x_selected, alpha)
+    # test grad_alpha2
+    grad2 = grad_alpha2(sigma, mu, y_agent, x_agent, x_selected, alpha)
+    # test grad_alpha and grad_alpha2 with 10e-1 precision
+    grad[0] = np.round(grad[0], 1)
+    grad2[0] = np.round(grad2[0], 1)
+    print(f'TEST : {grad[0] == grad2[0]}')
+    
+    # time the two functions
+    import time
+    start = time.time()
+    grad = grad_alpha(sigma, mu, y_agent, x_agent, x_selected, alpha)
+    end = time.time()
+    print(f'grad_alpha time : {end - start}')
+    start = time.time()
+    grad2 = grad_alpha2(sigma, mu, y_agent, x_agent, x_selected, alpha)
+    end = time.time()
+    print(f'grad_alpha2 time : {end - start}')
