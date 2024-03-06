@@ -84,6 +84,7 @@ def grad_alpha(sigma, mu, y_agent, x_agent, x_selected, alpha):
     # x_agent : list of numpy arrays
     # x_selected : numpy array
     # alpha : list of numpy arrays
+    # return : numpy array of shape (a, m)
     Kmm = kernel_matrix(x_selected, x_selected)
     a = len(x_agent)
     grad = [0 for i in range(a)] #list of numpy arrays
@@ -98,8 +99,7 @@ def grad_alpha(sigma, mu, y_agent, x_agent, x_selected, alpha):
         grad[i] = (1/a) * (sigma**2 * Kmm + mu * np.eye(len(x_selected))) @ alpha[i] + \
             big_kernel_im_transpose @ (big_kernel_im @ alpha[i] - y_agent[i])
         # print(f'grad[i] shape : {grad[i].shape}')
-        
-    return grad
+    return np.array(grad).reshape(a, len(x_selected))
 
 def grad_alpha2(sigma, mu, y_agent, x_agent, x_selected, alpha):
     Kmm = kernel_matrix(x_selected, x_selected)
