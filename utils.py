@@ -115,7 +115,7 @@ def grad_alpha2(sigma, mu, y_agent, x_agent, x_selected, alpha):
             term_toadd = - y_agent[i][j]*np.transpose(kernel_im(x_agent[i][j], x_selected)) + \
                 np.transpose(kernel_im(x_agent[i][j], x_selected)) * (kernel_im(x_agent[i][j], x_selected) @ alpha[i])
             grad[i] += term_toadd.squeeze()
-    return grad
+    return np.array(grad).reshape(a, len(x_selected))
 
 
 # main
@@ -154,7 +154,11 @@ if __name__ == "__main__":
     # test grad_alpha and grad_alpha2 with 10e-1 precision
     grad[0] = np.round(grad[0], 1)
     grad2[0] = np.round(grad2[0], 1)
+    grad[1] = np.round(grad[1], 1)
+    grad2[1] = np.round(grad2[1], 1)
     print(f'TEST : {grad[0] == grad2[0]}')
+    print(f'TEST : {grad[1] == grad2[1]}')
+
     
     # time the two functions
     import time
