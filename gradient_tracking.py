@@ -1,7 +1,7 @@
 from utils import *
 
 
-def gradient_tracking(x, y, x_selected, m, sigma, mu, lr):
+def gradient_tracking(x, y, x_selected, m, sigma, mu, lr, max_iter=1000):
     """
     This function implements the gradient tracking algorithm.
 
@@ -34,18 +34,15 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr):
     # initial gradient for each agent
     gradient = [np.arange(m) for i in range(a)]
     alpha = np.array(alpha).reshape(a*m, 1)
-    gradient = np.array(gradient).reshape(a*m, 1)
-    print(f'alpha shape : {alpha.shape}')
-    print(f'gradient shape : {gradient.shape}')
-
-    W = 1/a*(np.ones((a, a)))  # define the weight matrix
+    gradient = grad_alpha(sigma, mu, y, x, x_selected,
+                          alpha.reshape(a, m)).reshape(a*m, 1)
+    W = np.array([[1/3, 1/3, 0, 0, 1/3],
+                  [1/3, 1/3, 1/3, 0, 0],
+                  [0, 1/3, 1/3, 1/3, 0],
+                  [0, 0, 1/3, 1/3, 1/3],
+                  [1/3, 0, 0, 1/3, 1/3]])  # 1/a*(np.ones((a, a)))  # define the weight matrix
     # define the kronecker product of the weight matrix
     W_bar = np.kron(W, np.eye(m))
-    print(f'W_bar shape : {W_bar.shape}')
-    print(f'W_bar * alpha shape : {(W_bar @ alpha).shape}')
-
-    print()
-    alpha_mean = 1000*np.ones(m)
     j = 0
     while np.linalg.norm(alpha.reshape(a, m)[0] - alpha_mean) > 0.001 and j < 1000:
         j += 1
@@ -53,14 +50,20 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr):
         #     alpha[i] = W_bar * alpha[i]+ lr * gradient[i]
         #     gradient[i] = grad_alpha(x, y, sigma, alpha[i])
         alpha_new = W_bar @ alpha - lr * gradient
-        # TODO alpha new sous forme de liste ??
-        gradient = W_bar @ gradient + grad_alpha(sigma, mu, y, x, x_selected, alpha_new) - \
-            grad_alpha(sigma, mu, y, x, x_selected, alpha)
+        # IMPORTANT : in grad_alpha alpha should be a 2D array
+        gradient = W_bar @ gradient + grad_alpha(sigma, mu, y, x, x_selected, alpha_new.reshape(a, m)).reshape(a*m, 1) - \
+            grad_alpha(sigma, mu, y, x, x_selected,
+                       alpha.reshape(a, m)).reshape(a*m, 1)
         alpha = alpha_new
-        alpha_mean = np.mean(alpha.reshape(a, m), axis=1)
-        print(f'alpha mean : {alpha_mean}')
+        alpha_mean = np.mean(alpha.reshape(a, m), axis=0)
+        alpha_list.append(alpha.reshape(a, m))
+        alpha_mean_list.append(alpha_mean)
+        # print(f'Iteration {j} : {np.linalg.norm(alpha_mean)}')
 
-    return alpha
+    alpha_optim = alpha.reshape(a, m)
+    alpha_optim = np.mean(alpha_optim, axis=0)
+
+    return alpha_optim, j, alpha_list
 
 
 if __name__ == "__main__":
