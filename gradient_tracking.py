@@ -66,17 +66,14 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr, max_iter=1000):
 
 if __name__ == "__main__":
     ALPHA = False
-
     # # Load the data x and y
     with open('first_database.pkl', 'rb') as f:
         x, y = pickle.load(f)
-
     # # Data visualization
     # plt.plot(x, y, 'o', label='Data')
     # plt.xlabel('x')
     # plt.ylabel('y')
     # plt.show()
-    
     # Generate the data
     a = 5
     n = 100
@@ -86,7 +83,7 @@ if __name__ == "__main__":
     print(f'Nb data points : {n}')
     print(f'Nb selected points : {m}')
     print(f'Points per agent : {n/a}\n')
-
+    """
     # Data visualization
     # for j in range(a):
     #     plt.plot(agent_x[j], agent_y[j], 'o', label='Data')
@@ -156,5 +153,5 @@ if __name__ == "__main__":
     
   
     
-
+"""
     
