@@ -5,6 +5,8 @@ import cvxpy as cp
 import networkx as nx
 
 # defining kernel function
+
+
 def kernel_matrix(x, y):
     # Euclidean Kernel
     # x and y are numpy arrays
@@ -87,7 +89,7 @@ def grad_alpha(sigma, mu, y_agent, x_agent, x_selected, alpha):
     # return : numpy array of shape (a, m)
     Kmm = kernel_matrix(x_selected, x_selected)
     a = len(x_agent)
-    grad = [0 for i in range(a)] #list of numpy arrays
+    grad = [0 for i in range(a)]  # list of numpy arrays
     for i in range(a):
         # print(f'alpha[i] shape : {alpha[i].shape}')
         # print(f'x_agent[i] shape should be n/nb agents (= 20): {x_agent[i].shape}')
@@ -99,12 +101,14 @@ def grad_alpha(sigma, mu, y_agent, x_agent, x_selected, alpha):
         grad[i] = (1/a) * (sigma**2 * Kmm + mu * np.eye(len(x_selected))) @ alpha[i] + \
             big_kernel_im_transpose @ (big_kernel_im @ alpha[i] - y_agent[i])
         # print(f'grad[i] shape : {grad[i].shape}')
-    return np.array(grad).reshape(a, len(x_selected))
+
+    return grad
+
 
 def grad_alpha2(sigma, mu, y_agent, x_agent, x_selected, alpha):
     Kmm = kernel_matrix(x_selected, x_selected)
     a = len(x_agent)
-    grad = [0 for i in range(a)] #list of numpy arrays
+    grad = [0 for i in range(a)]  # list of numpy arrays
     for i in range(a):
         grad[i] = (sigma**2*Kmm @ alpha[i] + mu*alpha[i]) / a
         # print(f'\ngrad[i] shape : {grad[i].shape}')
@@ -113,7 +117,8 @@ def grad_alpha2(sigma, mu, y_agent, x_agent, x_selected, alpha):
             # print(f'kernel_im_transpose shape (should be 10, 1) : {np.transpose(kernel_im(x_agent[i][j], x_selected)).shape}')
             # print(f'alpha[i] shape : {alpha[i].shape}')
             term_toadd = - y_agent[i][j]*np.transpose(kernel_im(x_agent[i][j], x_selected)) + \
-                np.transpose(kernel_im(x_agent[i][j], x_selected)) * (kernel_im(x_agent[i][j], x_selected) @ alpha[i])
+                np.transpose(kernel_im(
+                    x_agent[i][j], x_selected)) * (kernel_im(x_agent[i][j], x_selected) @ alpha[i])
             grad[i] += term_toadd.squeeze()
     return np.array(grad).reshape(a, len(x_selected))
 
@@ -125,7 +130,7 @@ if __name__ == "__main__":
     y = np.array([1, 1, 1, 1])
     test = kernel_matrix(x, y)
     print(test.shape == (3, 4))
-    print(test==np.array([[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]]))
+    print(test == np.array([[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]]))
 
     # Test kernel_im
     xi = 1
@@ -157,9 +162,7 @@ if __name__ == "__main__":
     grad[1] = np.round(grad[1], 1)
     grad2[1] = np.round(grad2[1], 1)
     print(f'TEST : {grad[0] == grad2[0]}')
-    print(f'TEST : {grad[1] == grad2[1]}')
 
-    
     # time the two functions
     import time
     start = time.time()
