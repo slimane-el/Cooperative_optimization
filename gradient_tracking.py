@@ -65,7 +65,7 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr, max_iter=1000):
     return alpha_optim, j, alpha_list
 
 if __name__ == "__main__":
-    ALPHA = False
+    ALPHA = True
 
     # # Load the data x and y
     with open('first_database.pkl', 'rb') as f:
