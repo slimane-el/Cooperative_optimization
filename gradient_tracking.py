@@ -1,5 +1,6 @@
 from utils import *
 
+
 def gradient_tracking(x, y, x_selected, m, sigma, mu, lr):
     """
     This function implements the gradient tracking algorithm.
@@ -27,10 +28,11 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr):
         The final alpha.
 
     """
-    a = len(x) # number of agents
+    a = len(x)  # number of agents
     # stacked points
-    alpha = [np.arange(m) for i in range(a)] # initial alpha for each agent
-    gradient = [np.arange(m) for i in range(a)] # initial gradient for each agent
+    alpha = [np.arange(m) for i in range(a)]  # initial alpha for each agent
+    # initial gradient for each agent
+    gradient = [np.arange(m) for i in range(a)]
     alpha = np.array(alpha).reshape(a*m, 1)
     gradient = np.array(gradient).reshape(a*m, 1)
     print(f'alpha shape : {alpha.shape}')
@@ -45,7 +47,7 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr):
     print()
     alpha_mean = 1000*np.ones(m)
     j = 0
-    while np.linalg.norm(alpha.reshape(a, m)[0] - alpha_mean) > 0.001 and j<1000:
+    while np.linalg.norm(alpha.reshape(a, m)[0] - alpha_mean) > 0.001 and j < 1000:
         j += 1
         # for i in range(a):
         #     alpha[i] = W_bar * alpha[i]+ lr * gradient[i]
@@ -60,8 +62,9 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr):
 
     return alpha
 
+
 if __name__ == "__main__":
-    
+
     # # Load the data x and y
     with open('first_database.pkl', 'rb') as f:
         x, y = pickle.load(f)
@@ -71,12 +74,13 @@ if __name__ == "__main__":
     # plt.xlabel('x')
     # plt.ylabel('y')
     # plt.show()
-    
+
     # Generate the data
     a = 5
     n = 100
     m = 10
-    agent_x, agent_y, selected_points, x_selected, y_selected = get_agents_from_pickle('first_database.pkl', 5, 100, 10)
+    agent_x, agent_y, selected_points, x_selected, y_selected = get_agents_from_pickle(
+        'first_database.pkl', 5, 100, 10)
     print(x.shape)
     print(y.shape)
     print(type(x_selected))
@@ -85,11 +89,11 @@ if __name__ == "__main__":
 
     # Compute the alpha optimal
     sigma = 0.5
-    mu = 0 
+    mu = 0
     lr = 0.1
-    alpha_optim = gradient_tracking(agent_x, agent_y, x_selected, m, sigma, mu, lr)
+    alpha_optim = gradient_tracking(
+        agent_x, agent_y, x_selected, m, sigma, mu, lr)
 
-    
     """
      # Data visualization
     for j in range(a):
