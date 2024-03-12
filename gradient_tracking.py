@@ -85,7 +85,7 @@ if __name__ == "__main__":
     print(f'Nb data points : {n}')
     print(f'Nb selected points : {m}')
     print(f'Points per agent : {n/a}\n')
-    """
+    
     # Data visualization
     # for j in range(a):
     #     plt.plot(agent_x[j], agent_y[j], 'o', label='Data')
@@ -129,15 +129,13 @@ if __name__ == "__main__":
     alpha_optim = gradient_tracking(
         agent_x, agent_y, x_selected, m, sigma, mu, lr)
 
-    """
+    
      # Data visualization
     for j in range(a):
         plt.plot(agent_x[j], agent_y[j], 'o', label='Data')
     plt.xlabel('x')
     plt.ylabel('y')
     plt.show()
-    
-  
-    
-"""
+      
+
     
