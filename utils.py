@@ -58,9 +58,13 @@ def get_agents_from_pickle(pickle_name, a, n, m, plot=False):
     selected_points = np.random.choice(np.array(range(n)), m, replace=False)
     x_selected = x[selected_points]
     y_selected = y[selected_points]
+
+    selected_points_agents = np.array(range(n))
+    np.random.shuffle(selected_points_agents)
+    # print(selected_points_agents)
     for j in range(a):
-        agent_x.append(x[j*20:j*20+20])
-        agent_y.append(y[j*20:j*20+20])
+        agent_x.append(x[selected_points_agents[j*20:j*20+20]])
+        agent_y.append(y[selected_points_agents[j*20:j*20+20]])
 
     # Data visualization
     if plot:
@@ -136,7 +140,7 @@ if __name__ == "__main__":
     print(test)
 
     x_agent, y_agent, x_selected, y_selected, selected_points = get_agents_from_pickle(
-        'first_database.pkl', a=5, n=100, m=10)
+        'first_database.pkl', a=5, n=100, m=10, plot=True)
 
     # test grad_alpha
     sigma = 0.5

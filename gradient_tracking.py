@@ -66,7 +66,7 @@ def visual_graph(liste_indice):
     return 0
 
 
-def gradient_tracking(x, y, x_selected, m, sigma, mu, lr, max_iter=1000):
+def gradient_tracking(x, y, x_selected, sigma, mu, lr, W, max_iter=1000):
     """
     This function implements the gradient tracking algorithm.
 
@@ -96,16 +96,12 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr, max_iter=1000):
     alpha_list = []
     alpha_mean_list = []
     a = len(x) # number of agents
+    m = len(x_selected) # number of selected points
     # stacked points
-    # initial alpha random with gaussian distribution
-    alpha = np.random.normal(0, 1, (a, m))
-    alpha = np.array(alpha).reshape(a*m, 1)
+    # initial alpha random with 0
+    alpha = np.zeros((a*m, 1))
+    # alpha = np.array(alpha).reshape(a*m, 1)
     gradient = grad_alpha(sigma, mu, y, x, x_selected, alpha.reshape(a, m)).reshape(a*m, 1)
-    W = np.array([[1/3, 1/3, 0, 0, 1/3], 
-                  [1/3, 1/3, 1/3, 0, 0], 
-                  [0, 1/3, 1/3, 1/3, 0], 
-                  [0, 0, 1/3, 1/3, 1/3],
-                  [1/3, 0, 0, 1/3, 1/3]] ) # 1/a*(np.ones((a, a)))  # define the weight matrix
     # define the kronecker product of the weight matrix
     W_bar = np.kron(W, np.eye(m))
     j = 0
@@ -123,7 +119,6 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr, max_iter=1000):
     
     alpha_optim = alpha.reshape(a, m)
     alpha_optim = np.mean(alpha_optim, axis=0)
-
     return alpha_optim, j, alpha_list
 
 if __name__ == "__main__":
@@ -141,7 +136,8 @@ if __name__ == "__main__":
     a = 5
     n = 100
     m = 10
-    agent_x, agent_y, selected_points, x_selected, y_selected = get_agents_from_pickle('first_database.pkl', 5, 100, 10)
+    agent_x, agent_y, selected_points, x_selected, y_selected = get_agents_from_pickle(
+       'first_database.pkl', a, n, m)
     print(f'Nb agents : {a}')
     print(f'Nb data points : {n}')
     print(f'Nb selected points : {m}')
@@ -161,23 +157,17 @@ if __name__ == "__main__":
     # Adj = nx.adjacency_matrix(Gx).todense()
     # print(Adj)
 
-    if ALPHA == True:
-        # Compute the alpha optimal
-        print("Compute the alpha optimal....")
-        sigma = 0.5
-        start = time.time()
-        alpha_optim = compute_alpha(x , y, x_selected, sigma)
-        end = time.time()
-        print(f'Time to compute alpha optimal : {end - start}\n')
+    # Compute the alpha optimal
+    print("Compute the alpha optimal....")
+    sigma = 0.5
+    start = time.time()
+    alpha_optim = compute_alpha(x , y, x_selected, sigma)
+    end = time.time()
+    print(f'Time to compute alpha optimal : {end - start}\n')
 
-        # Export alpha optimal to a file
-        with open('alpha_optim.pkl', 'wb') as f:
-            pickle.dump(alpha_optim, f)
-
-    else :
-        # Load alpha optimal from a file
-        with open('alpha_optim.pkl', 'rb') as f:
-            alpha_optim = pickle.load(f)
+    # Export alpha optimal to a file
+    with open('alpha_optim.pkl', 'wb') as f:
+        pickle.dump(alpha_optim, f)
 
     print(f'alpha optimal : {alpha_optim}\n')
 
@@ -188,9 +178,14 @@ if __name__ == "__main__":
     mu = 10
     lr = 0.002
     max_iter = 5000
+    W = np.array([[1/3, 1/3, 0, 0, 1/3], 
+                  [1/3, 1/3, 1/3, 0, 0], 
+                  [0, 1/3, 1/3, 1/3, 0], 
+                  [0, 0, 1/3, 1/3, 1/3],
+                  [1/3, 0, 0, 1/3, 1/3]] ) 
     start = time.time()
     alpha_optim_gt, tot_ite, alpha_list = gradient_tracking(
-        agent_x, agent_y, x_selected, m, sigma, mu, lr, max_iter)
+        agent_x, agent_y, x_selected, sigma, mu, lr, W, max_iter)
     end = time.time()
     print(f'alpha optimal with gradient tracking : {alpha_optim_gt}')
     print(f'Time to compute alpha optimal with gradient tracking : {end - start}')
