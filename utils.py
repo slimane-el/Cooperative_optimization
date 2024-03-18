@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 import networkx as nx
-from sinkhorn_knopp import sinkhorn_knopp as skp
+# from sinkhorn_knopp import sinkhorn_knopp as skp
 from tqdm import tqdm
 import time
 
@@ -85,14 +85,6 @@ def get_agents_from_pickle(pickle_name, a, n, m, plot=False):
 
 
 def grad_alpha(sigma, mu, y_agent, x_agent, x_selected, alpha):
-    # summary :
-    # sigma : float
-    # mu : float
-    # y_agent : list of numpy arrays
-    # x_agent : list of numpy arrays
-    # x_selected : numpy array
-    # alpha : list of numpy arrays
-    # return : numpy array of shape (a, m)
     Kmm = kernel_matrix(x_selected, x_selected)
     a = len(x_agent)
     grad = [0 for i in range(a)]  # list of numpy arrays
@@ -105,15 +97,9 @@ def grad_alpha(sigma, mu, y_agent, x_agent, x_selected, alpha):
 
 
 def grad_alpha_v3(sigma, mu, x, y, alpha, K, selected_points, selected_points_agents):
-    # summary :
-    # sigma : float
-    # mu : float
-    # alpha : list of numpy arrays
-    # return : numpy array of shape (a, m)
     Kmm = get_Kij(selected_points, selected_points, K)
-    # Kmm = kernel_matrix(x_selected, x_selected)
     a = len(selected_points_agents)
-    grad = [0 for i in range(a)]  # list of numpy arrays
+    grad = [0 for i in range(a)] 
     for i in range(a):
         big_kernel_im = get_Kij(selected_points_agents[i], selected_points, K)
         big_kernel_im_transpose = np.transpose(big_kernel_im)
