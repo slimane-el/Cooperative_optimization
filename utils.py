@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
-# import cvxpy as cp
 import networkx as nx
 
 # defining kernel function
