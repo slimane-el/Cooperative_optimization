@@ -31,9 +31,6 @@ def kernel_im(xi, xm):
     return K
 
 def get_Kij(index_i, index_j, K):
-    # slice matrix K with index_i, index_j 
-    # index_i = np.sort(index_i)
-    # index_j = np.sort(index_j)
     Kij = K[np.array(index_i), :]
     Kij = Kij[:, np.array(index_j)]
     return Kij
