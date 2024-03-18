@@ -91,17 +91,10 @@ def grad_alpha(sigma, mu, y_agent, x_agent, x_selected, alpha):
     a = len(x_agent)
     grad = [0 for i in range(a)]  # list of numpy arrays
     for i in range(a):
-        # print(f'alpha[i] shape : {alpha[i].shape}')
-        # print(f'x_agent[i] shape should be n/nb agents (= 20): {x_agent[i].shape}')
-        # print(f'x_selected shape should be m (=10): {x_selected.shape}')
         big_kernel_im = kernel_matrix(x_agent[i], x_selected)
-        # print(f'big_kernel_im shape (should be 20, 10 ) : {big_kernel_im.shape}')
         big_kernel_im_transpose = np.transpose(big_kernel_im)
-        # print(f'big_kernel_im_transpose shape : {big_kernel_im_transpose.shape}')
         grad[i] = (1/a) * (sigma**2 * Kmm + mu * np.eye(len(x_selected))) @ alpha[i] + \
             big_kernel_im_transpose @ (big_kernel_im @ alpha[i] - y_agent[i])
-        # print(f'grad[i] shape : {grad[i].shape}')
-
     return np.array(grad).reshape(a, len(x_selected))
 
 
@@ -111,11 +104,7 @@ def grad_alpha2(sigma, mu, y_agent, x_agent, x_selected, alpha):
     grad = [0 for i in range(a)]  # list of numpy arrays
     for i in range(a):
         grad[i] = (sigma**2*Kmm @ alpha[i] + mu*alpha[i]) / a
-        # print(f'\ngrad[i] shape : {grad[i].shape}')
         for j in range(len(x_agent[i])):
-            # print(f'kernel_im shape (should be 1, 10 ) : {kernel_im(x_agent[i][j], x_selected).shape}')
-            # print(f'kernel_im_transpose shape (should be 10, 1) : {np.transpose(kernel_im(x_agent[i][j], x_selected)).shape}')
-            # print(f'alpha[i] shape : {alpha[i].shape}')
             term_toadd = - y_agent[i][j]*np.transpose(kernel_im(x_agent[i][j], x_selected)) + \
                 np.transpose(kernel_im(
                     x_agent[i][j], x_selected)) * (kernel_im(x_agent[i][j], x_selected) @ alpha[i])

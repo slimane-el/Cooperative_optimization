@@ -1,5 +1,70 @@
 from utils import *
 import time
+# from sinkhorn_knopp import sinkhorn_knopp as skp
+
+def is_double_sto(A):
+  """
+  Vérifie si A est doublement stochastique
+  """
+  if A.shape[0]!=A.shape[1]:
+    print("Mauvaise forme")
+    return False
+  reponse=True
+  ligne = np.zeros(A.shape[0])
+  col = np.zeros(A.shape[0])
+  for i in range (A.shape[0]):
+    ligne[i] = A[i,:].sum()
+    if not np.isclose(A[i,:].sum(),1): 
+      reponse=False
+    col[i] = A[:,i].sum()
+    if not np.isclose(A[:,i].sum(),1,rtol=0.01): 
+      reponse = False
+  if reponse == False:
+    print("ligne : ",ligne)
+    print("Colonne : ",col) 
+
+  return reponse
+
+# def create_W(liste,taille,auto=True):
+#     """
+#     liste des arrêtes
+#     taille du graphe
+#     auto : bool : diagonale mise à 1
+#     """
+#     sk = skp.SinkhornKnopp()
+#     if auto==True:
+#         res=np.eye(taille)
+#     else:
+#         res=np.zeros((taille,taille))
+#     for i,j in liste: 
+#         res[i,j]=1
+#         res[j,i]=1
+#     return sk.fit(res)
+
+
+def visual_graph(liste_indice):
+    G = nx.Graph()
+    for i,j in liste_indice:
+        G.add_edge(i+1, j+1)
+    # explicitly set positions
+    pos = {1: (-1, 0), 2: (np.cos(3*np.pi/5), np.sin(3*np.pi/5)), 3: (np.cos(np.pi/5), np.sin(np.pi/5))
+           , 4: (np.cos(-np.pi/5), np.sin(-np.pi/5)), 5: (np.cos(-3*np.pi/5),np.sin(-3*np.pi/5))}
+    options = {
+    "font_size": 36,
+    "node_size": 3000,
+    "node_color": "white",
+    "edgecolors": "black",
+    "linewidths": 1,
+    "width": 1,
+    }
+    nx.draw_networkx(G, pos, **options)
+    # Set margins for the axes so that nodes aren't clipped
+    ax = plt.gca()
+    ax.margins(0.1)
+    plt.axis("off")
+    plt.show()
+    return 0
+
 
 def gradient_tracking(x, y, x_selected, m, sigma, mu, lr, max_iter=1000):
     """
@@ -46,9 +111,6 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr, max_iter=1000):
     j = 0
     while j<max_iter: # np.linalg.norm(alpha.reshape(a, m)[0] - alpha_mean) > 0.001 and
         j += 1
-        # for i in range(a):
-        #     alpha[i] = W_bar * alpha[i]+ lr * gradient[i]
-        #     gradient[i] = grad_alpha(x, y, sigma, alpha[i])
         alpha_new = W_bar @ alpha - lr * gradient
         # IMPORTANT : in grad_alpha alpha should be a 2D array
         gradient = (W_bar @ gradient) + (grad_alpha(sigma, mu, y, x, x_selected, alpha_new.reshape(a, m)).reshape(a*m, 1) - \
@@ -70,13 +132,11 @@ if __name__ == "__main__":
     # # Load the data x and y
     with open('first_database.pkl', 'rb') as f:
         x, y = pickle.load(f)
-
     # # Data visualization
     # plt.plot(x, y, 'o', label='Data')
     # plt.xlabel('x')
     # plt.ylabel('y')
     # plt.show()
-    
     # Generate the data
     a = 5
     n = 100
