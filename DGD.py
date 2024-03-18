@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pickle
 import cvxpy as cp
 import networkx as nx
-from utils import kernel_matrix, kernel_im, compute_alpha, get_agents_from_pickle, grad_alpha, grad_alpha2
+from utils import kernel_matrix, kernel_im, compute_alpha, get_agents_from_pickle, grad_alpha, grad_alpha2, grad_alpha_v3
 
 
 def DGD_revisited(mu, sigma, a, adjacency_matrix, y_agent, x_agent, x_selected, alpha_opt, lr):
@@ -18,27 +18,37 @@ def DGD_revisited(mu, sigma, a, adjacency_matrix, y_agent, x_agent, x_selected, 
     j = 0
     while j < 5000:
         j += 1
-        alpha = W_bar @ alpha + lr * \
+        alpha = W_bar @ alpha - lr * \
             np.array(grad_alpha(sigma, mu, y_agent, x_agent,
                                 x_selected, alpha.reshape(a, n))).reshape(a*n, 1)
+    return alpha
+
+def DGD_revisited_v2(mu, sigma, adjacency_matrix, y, x, selected_points, selected_points_agent, K, lr):
+    # stacked points
+    a = len(selected_points_agent)
+    n = len(selected_points)
+    alpha = np.zeros((a, n))
+    # initial alpha
+    alpha = alpha.reshape(a*n, 1)
+    W = 1/(a)*(adjacency_matrix) # define the weight matrix
+    # define the kronecker product of the weight matrix
+    W_bar = np.kron(W, np.eye(n))
+    j = 0
+    while j < 5000:
+        j += 1
+        g = grad_alpha_v3(sigma, mu, x, y, alpha.reshape(a, n), K, selected_points, selected_points_agent)
+        alpha = W_bar @ alpha - lr * np.array(g).reshape(a*n, 1)
     return alpha
 
 
 if __name__ == "__main__":
     with open('first_database.pkl', 'rb') as f:
         x, y = pickle.load(f)
-
-    # # Data visualization
-    # plt.plot(x, y, 'o', label='Data')
-    # plt.xlabel('x')
-    # plt.ylabel('y')
-    # plt.show()
-
     # Generate the data
     a = 5
     n = 100
     m = 10
-    agent_x, agent_y, selected_points, x_selected, y_selected = get_agents_from_pickle(
+    agent_x, agent_y, x_selected, y_selected, selected_points, selected_points_agents, K, x, y = get_agents_from_pickle(
         'first_database.pkl', 5, 100, 10)
     print(x_selected.shape)
     print(x_selected)
@@ -59,6 +69,13 @@ if __name__ == "__main__":
     # plt.show()
     Adj = np.ones((5, 5))
     print(Adj)
-    alpha_dgd = DGD_revisited(
-        mu, sigma, a, Adj, agent_y, agent_x, x_selected, alpha_exact, lr)
+
+    # alpha_dgd = DGD_revisited(
+    #     mu, sigma, a, Adj, agent_y, agent_x, x_selected, alpha_exact, lr)
+
+    alpha_dgd = DGD_revisited_v2(
+        mu, sigma, Adj, y, x, selected_points, selected_points_agents, K, lr)
+    
     print(alpha_dgd.reshape(a, m).mean(axis=0))
+
+
