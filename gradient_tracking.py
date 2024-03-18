@@ -1,9 +1,4 @@
 from utils import *
-import time
-from tqdm import tqdm
-
-# from sinkhorn_knopp import sinkhorn_knopp as skp
-
 
 # def gradient_tracking(x, y, x_selected, sigma, mu, lr, W, max_iter=1000):
 #     alpha_list = []
@@ -31,7 +26,6 @@ from tqdm import tqdm
 #     alpha_optim = alpha.reshape(a, m)
 #     alpha_optim = np.mean(alpha_optim, axis=0)
 #     return alpha_optim, j, alpha_list
-
 
 
 def gradient_tracking_v2(x, y, selected_points, selected_points_agent, K, sigma, mu, lr, W, max_iter=1000):

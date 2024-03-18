@@ -2,6 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 import networkx as nx
+from sinkhorn_knopp import sinkhorn_knopp as skp
+from tqdm import tqdm
+import time
+
 
 # defining kernel function
 def kernel_matrix(x, y):
