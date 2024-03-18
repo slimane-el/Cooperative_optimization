@@ -51,8 +51,8 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr, max_iter=1000):
         #     gradient[i] = grad_alpha(x, y, sigma, alpha[i])
         alpha_new = W_bar @ alpha - lr * gradient
         # IMPORTANT : in grad_alpha alpha should be a 2D array
-        gradient = W_bar @ gradient + grad_alpha(sigma, mu, y, x, x_selected, alpha_new.reshape(a, m)).reshape(a*m, 1) - \
-            grad_alpha(sigma, mu, y, x, x_selected, alpha.reshape(a, m)).reshape(a*m, 1)
+        gradient = (W_bar @ gradient) + (grad_alpha(sigma, mu, y, x, x_selected, alpha_new.reshape(a, m)).reshape(a*m, 1) - \
+            grad_alpha(sigma, mu, y, x, x_selected, alpha.reshape(a, m)).reshape(a*m, 1))
         alpha = alpha_new
         alpha_mean = np.mean(alpha.reshape(a, m), axis=0)
         alpha_list.append(alpha.reshape(a, m))
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     sigma = 0.5
     mu = 10
     lr = 0.002
-    max_iter = 2000
+    max_iter = 5000
     start = time.time()
     alpha_optim_gt, tot_ite, alpha_list = gradient_tracking(
         agent_x, agent_y, x_selected, m, sigma, mu, lr, max_iter)
