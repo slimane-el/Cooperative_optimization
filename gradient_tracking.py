@@ -5,89 +5,44 @@ from tqdm import tqdm
 # from sinkhorn_knopp import sinkhorn_knopp as skp
 
 
-def gradient_tracking(x, y, x_selected, sigma, mu, lr, W, max_iter=1000):
-    """
-    This function implements the gradient tracking algorithm.
-
-    Parameters
-    ----------
-    x : list of numpy array
-        The x coordinates of the data points for each agent.
-    y : list of numpy array
-        The y coordinates of the data points for each agent.
-    n : int
-        The number of data points.
-    m : int
-        The number of selected data points.
-    sigma : float
-        The kernel parameter.
-    lr : float
-        The learning rate.
-    alpha_optim : numpy array
-        The optimal alpha.
-
-    Returns
-    -------
-    alpha : numpy array
-        The final alpha.
-
-    """
-    alpha_list = []
-    alpha_mean_list = []
-    a = len(x) # number of agents
-    m = len(x_selected) # number of selected points
-    # stacked points
-    # initial alpha random with 0
-    alpha = np.zeros((a*m, 1))
-    # alpha = np.array(alpha).reshape(a*m, 1)
-    gradient = grad_alpha(sigma, mu, y, x, x_selected, alpha.reshape(a, m)).reshape(a*m, 1)
-    # define the kronecker product of the weight matrix
-    W_bar = np.kron(W, np.eye(m))
-    # j = 0
-    for j in tqdm(range(max_iter)): # np.linalg.norm(alpha.reshape(a, m)[0] - alpha_mean) > 0.001 and
-        # j += 1
-        alpha_new = W_bar @ alpha - lr * gradient
-        # IMPORTANT : in grad_alpha alpha should be a 2D array
-        gradient = (W_bar @ gradient) + (grad_alpha(sigma, mu, y, x, x_selected, alpha_new.reshape(a, m)).reshape(a*m, 1) - \
-            grad_alpha(sigma, mu, y, x, x_selected, alpha.reshape(a, m)).reshape(a*m, 1))
-        alpha = alpha_new
-        alpha_mean = np.mean(alpha.reshape(a, m), axis=0)
-        alpha_list.append(alpha.reshape(a, m))
-        alpha_mean_list.append(alpha_mean)
-        # print(f'Iteration {j} : {np.linalg.norm(alpha_mean)}')
+# def gradient_tracking(x, y, x_selected, sigma, mu, lr, W, max_iter=1000):
+#     alpha_list = []
+#     alpha_mean_list = []
+#     a = len(x) # number of agents
+#     m = len(x_selected) # number of selected points
+#     # stacked points
+#     # initial alpha random with 0
+#     alpha = np.zeros((a*m, 1))
+#     # alpha = np.array(alpha).reshape(a*m, 1)
+#     gradient = grad_alpha(sigma, mu, y, x, x_selected, alpha.reshape(a, m)).reshape(a*m, 1)
+#     # define the kronecker product of the weight matrix
+#     W_bar = np.kron(W, np.eye(m))
+#     for j in tqdm(range(max_iter)): # np.linalg.norm(alpha.reshape(a, m)[0] - alpha_mean) > 0.001 and
+#         alpha_new = W_bar @ alpha - lr * gradient
+#         # IMPORTANT : in grad_alpha alpha should be a 2D array
+#         gradient = (W_bar @ gradient) + (grad_alpha(sigma, mu, y, x, x_selected, alpha_new.reshape(a, m)).reshape(a*m, 1) - \
+#             grad_alpha(sigma, mu, y, x, x_selected, alpha.reshape(a, m)).reshape(a*m, 1))
+#         alpha = alpha_new
+#         alpha_mean = np.mean(alpha.reshape(a, m), axis=0)
+#         alpha_list.append(alpha.reshape(a, m))
+#         alpha_mean_list.append(alpha_mean)
+#         # print(f'Iteration {j} : {np.linalg.norm(alpha_mean)}')
     
-    alpha_optim = alpha.reshape(a, m)
-    alpha_optim = np.mean(alpha_optim, axis=0)
-    return alpha_optim, j, alpha_list
+#     alpha_optim = alpha.reshape(a, m)
+#     alpha_optim = np.mean(alpha_optim, axis=0)
+#     return alpha_optim, j, alpha_list
 
 
 
 def gradient_tracking_v2(x, y, selected_points, selected_points_agent, K, sigma, mu, lr, W, max_iter=1000):
     """
     This function implements the gradient tracking algorithm.
-
     Parameters
     ----------
     x : list of numpy array
-        The x coordinates of the data points for each agent.
+        The x coordinates of the data points 
     y : list of numpy array
-        The y coordinates of the data points for each agent.
-    n : int
-        The number of data points.
-    m : int
-        The number of selected data points.
-    sigma : float
-        The kernel parameter.
-    lr : float
-        The learning rate.
-    alpha_optim : numpy array
-        The optimal alpha.
-
-    Returns
-    -------
-    alpha : numpy array
-        The final alpha.
-
+        The y coordinates of the data points 
     """
     alpha_list = []
     alpha_mean_list = []
@@ -99,13 +54,10 @@ def gradient_tracking_v2(x, y, selected_points, selected_points_agent, K, sigma,
     # alpha = np.array(alpha).reshape(a*m, 1)
     gradient = grad_alpha_v3(
         sigma, mu, x, y, alpha.reshape(a, m),
-          K, selected_points, selected_points_agent).reshape(a*m, 1)
-                             
+          K, selected_points, selected_points_agent).reshape(a*m, 1)                
     # define the kronecker product of the weight matrix
     W_bar = np.kron(W, np.eye(m))
-    j = 0
-    while j<max_iter: 
-        j += 1
+    for j in tqdm(range(max_iter)):
         alpha_new = W_bar @ alpha - lr * gradient
         # IMPORTANT : in grad_alpha alpha should be a 2D array
         g_new = grad_alpha_v3(
@@ -127,7 +79,6 @@ def gradient_tracking_v2(x, y, selected_points, selected_points_agent, K, sigma,
 
 
 if __name__ == "__main__":
-
     # # Load the data x and y
     with open('first_database.pkl', 'rb') as f:
         x, y = pickle.load(f)
@@ -170,12 +121,12 @@ if __name__ == "__main__":
                   [0, 1/3, 1/3, 1/3, 0], 
                   [0, 0, 1/3, 1/3, 1/3],
                   [1/3, 0, 0, 1/3, 1/3]] ) 
-    print("MATRICE DOUBLE STO : ", is_double_sto(W))
+    print("TEST MATRICE DOUBLE STO : ", is_double_sto(W))
     start = time.time()
-    alpha_optim_gt, tot_ite, alpha_list = gradient_tracking(
-        agent_x, agent_y, x_selected, sigma, mu, lr, W, max_iter=max_iter)
-    # alpha_optim_gt, tot_ite, alpha_list = gradient_tracking_v2(
-    #     x, y, selected_points, selected_points_agents, K, sigma, mu, lr, W, max_iter=max_iter)
+    # alpha_optim_gt, tot_ite, alpha_list = gradient_tracking(
+    #     agent_x, agent_y, x_selected, sigma, mu, lr, W, max_iter=max_iter)
+    alpha_optim_gt, tot_ite, alpha_list = gradient_tracking_v2(
+        x, y, selected_points, selected_points_agents, K, sigma, mu, lr, W, max_iter=max_iter)
     end = time.time()
     print(f'alpha optimal with gradient tracking : {alpha_optim_gt}')
     print(f'Time to compute alpha optimal with gradient tracking : {end - start}')
