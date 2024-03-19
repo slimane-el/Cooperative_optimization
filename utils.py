@@ -30,6 +30,7 @@ def kernel_im(xi, xm):
     # K should be of shape (1,n)
     return K
 
+
 def get_Kij(index_i, index_j, K):
     Kij = K[np.array(index_i), :]
     Kij = Kij[:, np.array(index_j)]
@@ -97,14 +98,14 @@ def grad_alpha(sigma, mu, y_agent, x_agent, x_selected, alpha):
 def grad_alpha_v3(sigma, mu, x, y, alpha, K, selected_points, selected_points_agents):
     Kmm = get_Kij(selected_points, selected_points, K)
     a = len(selected_points_agents)
-    grad = [0 for i in range(a)] 
+    grad = [0 for i in range(a)]
     for i in range(a):
         big_kernel_im = get_Kij(selected_points_agents[i], selected_points, K)
         big_kernel_im_transpose = np.transpose(big_kernel_im)
         grad[i] = (1/a) * (sigma**2 * Kmm + mu * np.eye(len(selected_points))) @ alpha[i] + \
-            big_kernel_im_transpose @ (big_kernel_im @ alpha[i] - y[selected_points_agents[i]])
+            big_kernel_im_transpose @ (big_kernel_im @
+                                       alpha[i] - y[selected_points_agents[i]])
     return np.array(grad).reshape(a, len(selected_points))
->>>>>>> 92850ba0d31b3282367f288c4e785bf6636892d2
 
 
 def grad_alpha2(sigma, mu, y_agent, x_agent, x_selected, alpha):
@@ -122,59 +123,60 @@ def grad_alpha2(sigma, mu, y_agent, x_agent, x_selected, alpha):
 
 
 def is_double_sto(A):
-  """
-  Vérifie si A est doublement stochastique
-  """
-  if A.shape[0]!=A.shape[1]:
-    print("Mauvaise forme")
-    return False
-  reponse=True
-  ligne = np.zeros(A.shape[0])
-  col = np.zeros(A.shape[0])
-  for i in range (A.shape[0]):
-    ligne[i] = A[i,:].sum()
-    if not np.isclose(A[i,:].sum(),1): 
-      reponse=False
-    col[i] = A[:,i].sum()
-    if not np.isclose(A[:,i].sum(),1,rtol=0.01): 
-      reponse = False
-  if reponse == False:
-    print("ligne : ",ligne)
-    print("Colonne : ",col) 
+    """
+    Vérifie si A est doublement stochastique
+    """
+    if A.shape[0] != A.shape[1]:
+        print("Mauvaise forme")
+        return False
+    reponse = True
+    ligne = np.zeros(A.shape[0])
+    col = np.zeros(A.shape[0])
+    for i in range(A.shape[0]):
+        ligne[i] = A[i, :].sum()
+        if not np.isclose(A[i, :].sum(), 1):
+            reponse = False
+        col[i] = A[:, i].sum()
+        if not np.isclose(A[:, i].sum(), 1, rtol=0.01):
+            reponse = False
+    if reponse == False:
+        print("ligne : ", ligne)
+        print("Colonne : ", col)
 
-  return reponse
+    return reponse
 
-def create_W(liste,taille,auto=True):
+
+def create_W(liste, taille, auto=True):
     """
     liste des arrêtes
     taille du graphe
     auto : bool : diagonale mise à 1
     """
     sk = skp.SinkhornKnopp()
-    if auto==True:
-        res=np.eye(taille)
+    if auto == True:
+        res = np.eye(taille)
     else:
-        res=np.zeros((taille,taille))
-    for i,j in liste: 
-        res[i,j]=1
-        res[j,i]=1
+        res = np.zeros((taille, taille))
+    for i, j in liste:
+        res[i, j] = 1
+        res[j, i] = 1
     return sk.fit(res)
 
 
 def visual_graph(liste_indice):
     G = nx.Graph()
-    for i,j in liste_indice:
+    for i, j in liste_indice:
         G.add_edge(i+1, j+1)
     # explicitly set positions
-    pos = {1: (-1, 0), 2: (np.cos(3*np.pi/5), np.sin(3*np.pi/5)), 3: (np.cos(np.pi/5), np.sin(np.pi/5))
-           , 4: (np.cos(-np.pi/5), np.sin(-np.pi/5)), 5: (np.cos(-3*np.pi/5),np.sin(-3*np.pi/5))}
+    pos = {1: (-1, 0), 2: (np.cos(3*np.pi/5), np.sin(3*np.pi/5)), 3: (np.cos(np.pi/5), np.sin(np.pi/5)),
+           4: (np.cos(-np.pi/5), np.sin(-np.pi/5)), 5: (np.cos(-3*np.pi/5), np.sin(-3*np.pi/5))}
     options = {
-    "font_size": 36,
-    "node_size": 3000,
-    "node_color": "white",
-    "edgecolors": "black",
-    "linewidths": 1,
-    "width": 1,
+        "font_size": 36,
+        "node_size": 3000,
+        "node_color": "white",
+        "edgecolors": "black",
+        "linewidths": 1,
+        "width": 1,
     }
     nx.draw_networkx(G, pos, **options)
     # Set margins for the axes so that nodes aren't clipped
@@ -183,8 +185,6 @@ def visual_graph(liste_indice):
     plt.axis("off")
     plt.show()
     return 0
-
-
 
 
 # main
@@ -210,12 +210,12 @@ if __name__ == "__main__":
 
     x_agent, y_agent, x_selected, y_selected, selected_points, selected_points_agent, K_test, x, y = get_agents_from_pickle(
         'first_database.pkl', a=5, n=100, m=10, plot=False)
-    
-    # test if get_Kij is good 
+
+    # test if get_Kij is good
     K1 = kernel_matrix(x_selected, x_selected)
     K2 = get_Kij(selected_points, selected_points, K_test)
     print("TEST get_Kij : ", K1 == K2)
-    
+
     # test grad_alpha vs grad_alpha_v3
     sigma = 0.5
     mu = 1
@@ -226,8 +226,7 @@ if __name__ == "__main__":
         sigma, mu, x, y, alpha, K_test, selected_points, selected_points_agent)
     gradv3 = np.round(gradv3, 1)
     print(gradv3)
-    print(f'TEST : {grad==gradv3}') # GOOOOOOD !!!!
-
+    print(f'TEST : {grad==gradv3}')  # GOOOOOOD !!!!
 
     """
     # test grad_alpha2
@@ -252,13 +251,9 @@ if __name__ == "__main__":
     """
 
     # Test is_double_sto
-    ind = [(0,1), (1,2), (2,3), (3,4), (4,0)]
+    ind = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 0)]
     Wtest = create_W(ind, 5, auto=False)
     print("TEST is_double_sto : ", is_double_sto(Wtest))
     print(Wtest)
     # Test visual_graph
     visual_graph(ind)
-    
-
-
-    
