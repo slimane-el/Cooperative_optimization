@@ -162,10 +162,11 @@ if __name__ == "__main__":
     # Plot selected points and the prediction of the model with the alpha optimal 
     plt.figure(0)
     plt.plot(x[0:n], y[0:n], 'o', label='Data')
-    x_predict = x[0:n]
-    # fx_predict = np.zeros(n)
-    print("get_Kij(x[0:n], x_selected, K).shape : ", get_Kij(range(n), selected_points, K).shape)
-    fx_predict = get_Kij(range(n), selected_points, K) @ alpha_optim_gt
+    x_predict = np.linspace(-1, 1, 250)
+    K_f = kernel_matrix(x_predict, x_selected)
+    # fx_predict = get_Kij(range(n), selected_points, K) @ alpha_optim_gt
+    fx_predict = K_f @ alpha_optim_gt
     plt.plot(x_predict, fx_predict, label='Prediction')
     plt.grid()
+    plt.legend()
     plt.show()
