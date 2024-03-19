@@ -1,14 +1,6 @@
 from utils import *
 import numpy as np
 
-# def compute_alpha(x, y, x_selected, sigma):
-#     n = len(x)
-#     m = len(x_selected)
-#     Kmm = kernel_matrix(x_selected, x_selected)
-#     Knm = kernel_matrix(x[0:n], x_selected)
-#     alpha_exact = np.linalg.inv(
-#         sigma**2*Kmm + np.eye(m)*mu + np.transpose(Knm) @ Knm) @ np.transpose(Knm) @ y[0:n]
-#     return alpha_exact
 
 def coef_edge(i, j, adj_matrix):
     if adj_matrix[i, j]==0:
@@ -17,6 +9,22 @@ def coef_edge(i, j, adj_matrix):
         return 0
     else:
         return -1
+    
+def search_A(W):
+    # Trouver la matrice A
+    edges_list = []
+    nb_agents = W.shape[0] # nombre de noeuds
+    for i in range(nb_agents):
+        for j in range(i):
+            if W[i,j]>0:
+                edges_list.append([i, j])
+    E = len(edges_list) # nombre d'arêtes
+    A_dd=np.zeros((m*E, m*nb_agents))
+    for e in range(E) : # pour chaque arête
+        edge = edges_list[e]
+        A_dd[e*m:(e+1)*m, edge[0]*m:(edge[0]+1)*m] = np.eye(m)
+        A_dd[e*m:(e+1)*m, edge[1]*m:(edge[1]+1)*m] = -np.eye(m)
+    return A_dd
     
 def solve_alpha_dualdec(x, y, selected_points, selected_points_agent, sigma, mu, K, adj_matrix, lamb):
     # lambda should be shape (E, 1) TODO which shape ??
@@ -39,9 +47,34 @@ def solve_alpha_dualdec(x, y, selected_points, selected_points_agent, sigma, mu,
         alpha.append(np.linalg.solve(A, b))
     return np.array(alpha)
 
-def dualDec(x, y, selected_points, selected_points_agent, K, sigma, mu, lr, W, max_iter=1000):
+def dualDec(x, y, selected_points, selected_points_agent, K, sigma, mu, lr, W, max_iter=1000, lamb0=0):
+    # graph is the adjacency matrix
+    # W is the weight matrix
+    graph = 1 * (W>0)
+    m = len(selected_points)
+    a = len(selected_points_agent)
+    for i in range(a):
+        graph[i, i] = 0
+    lambda_ij = lamb0*np.ones((a, a, m))
+    alpha_mean_list = []
+    alpha_list_agent = []
+    A = search_A(W)
+    for n_iter in tqdm(range(max_iter)):
+        # Calcul de x_i_star pour tous les noeuds
+        alpha_optim = np.zeros((a,m))
+        for agent in range(a): 
+            alpha_optim[agent, : ] = solve_alpha_dualdec(
+                x, y, selected_points, selected_points_agent, sigma, mu,
+                K, graph, lambda_ij[agent, : , : ])
+        for i in range(a):
+            for j in range(i):
+                lambda_ij[i, j, : ] += lr * (alpha_optim[i, :] - alpha_optim[j, :])
+        
+        # f_res.append(f_a(x_star.mean(axis=0),A,sigma,K_mm,K_im,N,y))
+        alpha_mean_list.append(alpha_optim.mean(axis=0))
+        alpha_list_agent.append(alpha_optim)
 
-    return alpha_optim, alpha_list
+    return alpha_optim, alpha_list_agent, alpha_mean_list
 
 
 # main
@@ -80,5 +113,10 @@ if __name__ == "__main__":
         x, y, selected_points, selected_points_agents, sigma, mu,
         K, adj_matrix, lamb)
     print(alphatest.shape)
+
+    dualDec(
+        x, y, selected_points, selected_points_agents,
+        K, sigma, mu, 0.1, adj_matrix, max_iter=1000, lamb0=0
+    )
 
     
