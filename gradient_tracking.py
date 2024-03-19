@@ -45,29 +45,30 @@ def gradient_tracking_v2(x, y, selected_points, selected_points_agent, K, sigma,
     # stacked points
     # initial alpha random with 0
     alpha = np.zeros((a*m, 1))
-    # alpha = np.array(alpha).reshape(a*m, 1)
+    alpha_old = alpha.copy()
     gradient = grad_alpha_v3(
-        sigma, mu, x, y, alpha.reshape(a, m),
+        sigma, mu, x, y, alpha_old.reshape(a, m),
           K, selected_points, selected_points_agent).reshape(a*m, 1)                
     # define the kronecker product of the weight matrix
     W_bar = np.kron(W, np.eye(m))
     for j in tqdm(range(max_iter)):
-        alpha_new = W_bar @ alpha - lr * gradient
+        alpha_new = W_bar @ alpha_old - lr * gradient
         # IMPORTANT : in grad_alpha alpha should be a 2D array
         g_new = grad_alpha_v3(
         sigma, mu, x, y, alpha_new.reshape(a, m),
           K, selected_points, selected_points_agent).reshape(a*m, 1)
         g_old =grad_alpha_v3(
-        sigma, mu, x, y, alpha.reshape(a, m),
+        sigma, mu, x, y, alpha_old.reshape(a, m),
           K, selected_points, selected_points_agent).reshape(a*m, 1)
-        gradient = (W_bar @ gradient) + (g_new - g_old)
-        alpha = alpha_new
-        alpha_mean = np.mean(alpha.reshape(a, m), axis=0)
-        alpha_list.append(alpha.reshape(a, m))
+        gradient = W_bar @ gradient
+        gradient += (g_new - g_old)
+        alpha_old = alpha_new
+        alpha_mean = np.mean(alpha_old.reshape(a, m), axis=0)
+        alpha_list.append(alpha_old.reshape(a, m))
         alpha_mean_list.append(alpha_mean)
         # print(f'Iteration {j} : {np.linalg.norm(alpha_mean)}')
     
-    alpha_optim = alpha.reshape(a, m)
+    alpha_optim = alpha_new.reshape(a, m)
     alpha_optim = np.mean(alpha_optim, axis=0)
     return alpha_optim, j, alpha_list
 
@@ -96,20 +97,25 @@ if __name__ == "__main__":
     print("Compute the alpha optimal....")
     sigma = 0.5
     start = time.time()
-    alpha_optim = compute_alpha(x , y, x_selected, sigma)
+    alpha_optim = compute_alpha(x, y, x_selected, sigma)
     end = time.time()
     print(f'Time to compute alpha optimal : {end - start}\n')
-    # Export alpha optimal to a file
-    with open('alpha_optim.pkl', 'wb') as f:
-        pickle.dump(alpha_optim, f)
+    # # Export alpha optimal to a file
+    # with open('alpha_optim.pkl', 'wb') as f:
+    #     pickle.dump(alpha_optim, f)
     print(f'alpha optimal : {alpha_optim}\n')
-
     # Compute the alpha optimal with the gradient tracking algorithm
     print("Compute the alpha optimal with the gradient tracking algorithm....")
     sigma = 0.5
-    mu = 10
+    mu = 1
     lr = 0.002
     max_iter = 20000
+
+    # create the weight matrix
+    # ind = [(0,1), (1,2), (2,3), (3,4), (4,0)]
+    # W = create_W(ind, 5, auto=False)
+    # print(W)
+    # visual_graph(ind)
     W = np.array([[1/3, 1/3, 0, 0, 1/3], 
                   [1/3, 1/3, 1/3, 0, 0], 
                   [0, 1/3, 1/3, 1/3, 0], 
@@ -135,11 +141,11 @@ if __name__ == "__main__":
     agent_4 = np.linalg.norm(np.array([alpha_list[i][3] for i in range(len(alpha_list))]) - alpha_optim, axis=1)
     agent_5 = np.linalg.norm(np.array([alpha_list[i][4] for i in range(len(alpha_list))]) - alpha_optim, axis=1)
 
-    plt.plot(agent_1, label='Agent 1')
-    plt.plot(agent_2, label='Agent 2')
-    plt.plot(agent_3, label='Agent 3')
-    plt.plot(agent_4, label='Agent 4')
-    plt.plot(agent_5, label='Agent 5')
+    plt.plot(agent_1, label='Agent 1', color='blue')
+    plt.plot(agent_2, label='Agent 2', color='red')
+    plt.plot(agent_3, label='Agent 3', color='green')
+    plt.plot(agent_4, label='Agent 4', color='orange')
+    plt.plot(agent_5, label='Agent 5', color='purple')
     plt.xlabel('Iterations')
     plt.ylabel('Optimality gap (norm)') 
     plt.show()
