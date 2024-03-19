@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 import networkx as nx
-# from sinkhorn_knopp import sinkhorn_knopp as skp
+from sinkhorn_knopp import sinkhorn_knopp as skp
 from tqdm import tqdm
 import time
 
@@ -142,21 +142,21 @@ def is_double_sto(A):
 
   return reponse
 
-# def create_W(liste,taille,auto=True):
-#     """
-#     liste des arrêtes
-#     taille du graphe
-#     auto : bool : diagonale mise à 1
-#     """
-#     sk = skp.SinkhornKnopp()
-#     if auto==True:
-#         res=np.eye(taille)
-#     else:
-#         res=np.zeros((taille,taille))
-#     for i,j in liste: 
-#         res[i,j]=1
-#         res[j,i]=1
-#     return sk.fit(res)
+def create_W(liste,taille,auto=True):
+    """
+    liste des arrêtes
+    taille du graphe
+    auto : bool : diagonale mise à 1
+    """
+    sk = skp.SinkhornKnopp()
+    if auto==True:
+        res=np.eye(taille)
+    else:
+        res=np.zeros((taille,taille))
+    for i,j in liste: 
+        res[i,j]=1
+        res[j,i]=1
+    return sk.fit(res)
 
 
 def visual_graph(liste_indice):
@@ -248,6 +248,14 @@ if __name__ == "__main__":
     end = time.time()
     print(f'grad_alpha2 time : {end - start}')
     """
+
+    # Test is_double_sto
+    ind = [(0,1), (1,2), (2,3), (3,4), (4,0)]
+    Wtest = create_W(ind, 5, auto=False)
+    print("TEST is_double_sto : ", is_double_sto(Wtest))
+    print(Wtest)
+    # Test visual_graph
+    visual_graph(ind)
     
 
 
