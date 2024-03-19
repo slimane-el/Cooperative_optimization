@@ -44,7 +44,7 @@ def gradient_tracking(x, y, x_selected, m, sigma, mu, lr, max_iter=1000):
     # define the kronecker product of the weight matrix
     W_bar = np.kron(W, np.eye(m))
     j = 0
-    while np.linalg.norm(alpha.reshape(a, m)[0] - alpha_mean) > 0.001 and j < 1000:
+    while np.linalg.norm(alpha.reshape(a, m)[0] - alpha_mean) > 0.0001 and j < 10000:
         j += 1
         # for i in range(a):
         #     alpha[i] = W_bar * alpha[i]+ lr * gradient[i]

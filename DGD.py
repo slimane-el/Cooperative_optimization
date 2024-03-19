@@ -12,16 +12,20 @@ def DGD_revisited(mu, sigma, a, adjacency_matrix, y_agent, x_agent, x_selected, 
     # initial alpha
     alpha = alpha.reshape(a*len(x_selected), 1)
     n = len(x_selected)
-    W = 1/(a)*(adjacency_matrix)  # define the weight matrix
+    W = 1.0/(a)*(adjacency_matrix)  # define the weight matrix
     # define the kronecker product of the weight matrix
     W_bar = np.kron(W, np.eye(n))
     j = 0
-    while j < 5000:
+    optimal_gap = []
+    while j < 50000:
         j += 1
-        alpha = W_bar @ alpha + lr * \
+        alpha = W_bar @ alpha - lr * \
             np.array(grad_alpha(sigma, mu, y_agent, x_agent,
                                 x_selected, alpha.reshape(a, n))).reshape(a*n, 1)
-    return alpha
+        optimal_gap.append(np.linalg.norm(
+            alpha.reshape(a, n).mean(axis=0)-alpha_opt))
+
+    return optimal_gap
 
 
 if __name__ == "__main__":
@@ -42,14 +46,13 @@ if __name__ == "__main__":
         'first_database.pkl', 5, 100, 10)
     print(x_selected.shape)
     print(x_selected)
-    sigma = 0.5
     mu = 1
-    lr = 0.002
+    sigma = 0.5
+    lr = 0.001
     Kmm = kernel_matrix(x_selected, x_selected)
     Knm = kernel_matrix(x[0:n], x_selected)
     # alpha_optim using cvxpy
     # Define the optimization variable
-    sigma = 0.5
     alpha_exact = np.linalg.inv(
         sigma**2*Kmm + np.eye(m) + np.transpose(Knm) @ Knm) @ np.transpose(Knm) @ y[0:n]
     print("the alpha exact is :", alpha_exact)
@@ -59,6 +62,10 @@ if __name__ == "__main__":
     # plt.show()
     Adj = np.ones((5, 5))
     print(Adj)
-    alpha_dgd = DGD_revisited(
+    optimal_gap = DGD_revisited(
         mu, sigma, a, Adj, agent_y, agent_x, x_selected, alpha_exact, lr)
-    print(alpha_dgd.reshape(a, m).mean(axis=0))
+    # plot the norm of the difference between alpha_exact and alpha_dgd.mean(axis=0) as a function of the iteration in log scale
+    plt.plot(optimal_gap)
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.show()

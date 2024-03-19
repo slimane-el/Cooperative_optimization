@@ -98,10 +98,9 @@ def grad_alpha(sigma, mu, y_agent, x_agent, x_selected, alpha):
         # print(f'big_kernel_im shape (should be 20, 10 ) : {big_kernel_im.shape}')
         big_kernel_im_transpose = np.transpose(big_kernel_im)
         # print(f'big_kernel_im_transpose shape : {big_kernel_im_transpose.shape}')
-        grad[i] = (1/a) * (sigma**2 * Kmm + mu * np.eye(len(x_selected))) @ alpha[i] + \
+        grad[i] = (1.0/a) * (sigma**2 * Kmm + mu * np.eye(len(x_selected))) @ alpha[i] + \
             big_kernel_im_transpose @ (big_kernel_im @ alpha[i] - y_agent[i])
         # print(f'grad[i] shape : {grad[i].shape}')
-
     return grad
 
 
