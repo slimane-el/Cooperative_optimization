@@ -44,7 +44,9 @@ def gradient_tracking_v2(x, y, selected_points, selected_points_agent, K, sigma,
     m = len(selected_points)  # number of selected points
     # stacked points
     # initial alpha random with 0
-    alpha = np.zeros((a*m, 1))
+    # alpha = np.zeros((a*m, 1))
+    # initial alpha with gaussian
+    alpha = np.random.normal(0, 100, (a*m, 1))
     alpha_old = alpha.copy()
     gradient = grad_alpha_v3(
         sigma, mu, x, y, alpha_old.reshape(a, m),
@@ -106,7 +108,6 @@ if __name__ == "__main__":
     print(f'alpha optimal : {alpha_optim}\n')
     # Compute the alpha optimal with the gradient tracking algorithm
     print("Compute the alpha optimal with the gradient tracking algorithm....")
-    sigma = 0.5
     mu = 1
     lr = 0.002
     max_iter = 20000
@@ -154,4 +155,17 @@ if __name__ == "__main__":
     plt.plot(agent_5, label='Agent 5', color='purple')
     plt.xlabel('Iterations')
     plt.ylabel('Optimality gap (norm)')
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.grid()
+    plt.show()
+    # Plot selected points and the prediction of the model with the alpha optimal 
+    plt.figure(0)
+    plt.plot(x[0:n], y[0:n], 'o', label='Data')
+    x_predict = x[0:n]
+    # fx_predict = np.zeros(n)
+    print("get_Kij(x[0:n], x_selected, K).shape : ", get_Kij(range(n), selected_points, K).shape)
+    fx_predict = get_Kij(range(n), selected_points, K) @ alpha_optim_gt
+    plt.plot(x_predict, fx_predict, label='Prediction')
+    plt.grid()
     plt.show()
