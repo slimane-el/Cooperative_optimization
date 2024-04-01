@@ -1,32 +1,5 @@
 from utils import *
 
-# def gradient_tracking(x, y, x_selected, sigma, mu, lr, W, max_iter=1000):
-#     alpha_list = []
-#     alpha_mean_list = []
-#     a = len(x) # number of agents
-#     m = len(x_selected) # number of selected points
-#     # stacked points
-#     # initial alpha random with 0
-#     alpha = np.zeros((a*m, 1))
-#     # alpha = np.array(alpha).reshape(a*m, 1)
-#     gradient = grad_alpha(sigma, mu, y, x, x_selected, alpha.reshape(a, m)).reshape(a*m, 1)
-#     # define the kronecker product of the weight matrix
-#     W_bar = np.kron(W, np.eye(m))
-#     for j in tqdm(range(max_iter)): # np.linalg.norm(alpha.reshape(a, m)[0] - alpha_mean) > 0.001 and
-#         alpha_new = W_bar @ alpha - lr * gradient
-#         # IMPORTANT : in grad_alpha alpha should be a 2D array
-#         gradient = (W_bar @ gradient) + (grad_alpha(sigma, mu, y, x, x_selected, alpha_new.reshape(a, m)).reshape(a*m, 1) - \
-#             grad_alpha(sigma, mu, y, x, x_selected, alpha.reshape(a, m)).reshape(a*m, 1))
-#         alpha = alpha_new
-#         alpha_mean = np.mean(alpha.reshape(a, m), axis=0)
-#         alpha_list.append(alpha.reshape(a, m))
-#         alpha_mean_list.append(alpha_mean)
-#         # print(f'Iteration {j} : {np.linalg.norm(alpha_mean)}')
-
-#     alpha_optim = alpha.reshape(a, m)
-#     alpha_optim = np.mean(alpha_optim, axis=0)
-#     return alpha_optim, j, alpha_list
-
 
 def gradient_tracking_v2(x, y, selected_points, selected_points_agent, K, sigma, mu, lr, W, max_iter=1000):
     """
@@ -44,7 +17,9 @@ def gradient_tracking_v2(x, y, selected_points, selected_points_agent, K, sigma,
     m = len(selected_points)  # number of selected points
     # stacked points
     # initial alpha random with 0
-    alpha = np.zeros((a*m, 1))
+    # alpha = np.zeros((a*m, 1))
+    # initial alpha with gaussian
+    alpha = np.random.normal(0, 100, (a*m, 1))
     alpha_old = alpha.copy()
     gradient = grad_alpha_v3(
         sigma, mu, x, y, alpha_old.reshape(a, m),
@@ -104,9 +79,9 @@ if __name__ == "__main__":
     # with open('alpha_optim.pkl', 'wb') as f:
     #     pickle.dump(alpha_optim, f)
     print(f'alpha optimal : {alpha_optim}\n')
+
     # Compute the alpha optimal with the gradient tracking algorithm
     print("Compute the alpha optimal with the gradient tracking algorithm....")
-    sigma = 0.5
     mu = 1
     lr = 0.002
     max_iter = 20000
@@ -154,4 +129,20 @@ if __name__ == "__main__":
     plt.plot(agent_5, label='Agent 5', color='purple')
     plt.xlabel('Iterations')
     plt.ylabel('Optimality gap (norm)')
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.grid()
+    plt.show()
+    # Plot selected points and the prediction of the model with the alpha optimal 
+    plt.figure(0)
+    for i in range(a):
+        plt.plot(agent_x[i], agent_y[i], 'o', label=f'Agent {i+1}')
+    # plt.plot(x[0:n], y[0:n], 'o', label='Data')
+    x_predict = np.linspace(-1, 1, 250)
+    K_f = kernel_matrix(x_predict, x_selected)
+    # fx_predict = get_Kij(range(n), selected_points, K) @ alpha_optim_gt
+    fx_predict = K_f @ alpha_optim_gt
+    plt.plot(x_predict, fx_predict, label='Prediction')
+    plt.grid()
+    plt.legend()
     plt.show()
