@@ -85,6 +85,7 @@ if __name__ == "__main__":
     # with open('alpha_optim.pkl', 'wb') as f:
     #     pickle.dump(alpha_optim, f)
     print(f'alpha optimal : {alpha_optim}\n')
+
     # create the weight matrix
     ind = [(0,1), (1,2), (2,3), (3,4), (4,0)]
     W = create_W(ind, 5, auto=False)
@@ -96,13 +97,12 @@ if __name__ == "__main__":
     #               [0, 0, 1/3, 1/3, 1/3],
     #               [1/3, 0, 0, 1/3, 1/3]])
     print("TEST MATRICE DOUBLE STO : ", is_double_sto(W))
-
     # Compute the alpha optimal with the dual decomposition algorithm
+    start = time.time()
     alpha_optim, alpha_list, alpha_mean_list = dualDec(
         x, y, selected_points, selected_points_agents,
         K, sigma, mu, 0.01, W, max_iter=1000, lamb0=0.
     )
-
     end = time.time()
     print(f'alpha optimal with dual decomposition : {alpha_optim}')
     print(
@@ -136,7 +136,9 @@ if __name__ == "__main__":
     plt.show()
     # Plot selected points and the prediction of the model with the alpha optimal 
     plt.figure(0)
-    plt.plot(x[0:n], y[0:n], 'o', label='Data')
+    for i in range(a):
+        plt.plot(agent_x[i], agent_y[i], 'o', label=f'Agent {i+1}')
+    # plt.plot(x[0:n], y[0:n], 'o', label='Data')
     x_predict = np.linspace(-1, 1, 250)
     K_f = kernel_matrix(x_predict, x_selected)
     # fx_predict = get_Kij(range(n), selected_points, K) @ alpha_optim_gt

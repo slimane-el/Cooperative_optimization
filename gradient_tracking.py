@@ -79,7 +79,7 @@ if __name__ == "__main__":
     # with open('alpha_optim.pkl', 'wb') as f:
     #     pickle.dump(alpha_optim, f)
     print(f'alpha optimal : {alpha_optim}\n')
-    
+
     # Compute the alpha optimal with the gradient tracking algorithm
     print("Compute the alpha optimal with the gradient tracking algorithm....")
     mu = 1
@@ -135,7 +135,9 @@ if __name__ == "__main__":
     plt.show()
     # Plot selected points and the prediction of the model with the alpha optimal 
     plt.figure(0)
-    plt.plot(x[0:n], y[0:n], 'o', label='Data')
+    for i in range(a):
+        plt.plot(agent_x[i], agent_y[i], 'o', label=f'Agent {i+1}')
+    # plt.plot(x[0:n], y[0:n], 'o', label='Data')
     x_predict = np.linspace(-1, 1, 250)
     K_f = kernel_matrix(x_predict, x_selected)
     # fx_predict = get_Kij(range(n), selected_points, K) @ alpha_optim_gt
