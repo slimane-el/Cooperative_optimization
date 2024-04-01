@@ -1,38 +1,9 @@
 from utils import *
 import numpy as np
 
-
-def coef_edge(i, j, adj_matrix):
-    if adj_matrix[i, j]==0:
-        return 0
-    elif adj_matrix[i, j]==1 and i>=j:
-        return 0
-    else:
-        return -1
-    
-def search_A(W):
-    # Trouver la matrice A
-    edges_list = []
-    nb_agents = W.shape[0] # nombre de noeuds
-    for i in range(nb_agents):
-        for j in range(i):
-            if W[i,j]>0:
-                edges_list.append([i, j])
-    E = len(edges_list) # nombre d'arêtes
-    A_dd=np.zeros((m*E, m*nb_agents))
-    for e in range(E) : # pour chaque arête
-        edge = edges_list[e]
-        A_dd[e*m:(e+1)*m, edge[0]*m:(edge[0]+1)*m] = np.eye(m)
-        A_dd[e*m:(e+1)*m, edge[1]*m:(edge[1]+1)*m] = -np.eye(m)
-    return A_dd
     
 def solve_alpha_dualdec(x, y, selected_points, selected_points_agent, sigma, mu, K, adj_matrix, lamb):
-    # lambda should be shape (E, 1) TODO which shape ??
-    # TODO : reshape lamb ?
-    #lamb = lamb.reshape
-    # E is the set of edges 
-    E = len(adj_matrix)
-    print("lamb shape : ", lamb.shape)
+    # print("lamb shape : ", lamb.shape)
     n = len(x)
     a = len(selected_points_agent)
     m = len(selected_points)
@@ -40,10 +11,14 @@ def solve_alpha_dualdec(x, y, selected_points, selected_points_agent, sigma, mu,
     alpha = []
     for i in range(a):
         Kim = get_Kij(selected_points_agent[i], selected_points, K)
-        coefs_edge = list(map(lambda i, j: coef_edge(i, j, adj_matrix), [i]*a, range(a))) # shape (1, ...)
-        lambi = lamb[i, :]
         A = sigma**2 * Kmm + np.eye(m)*mu + np.transpose(Kim) @ Kim
-        b = np.transpose(Kim) @ y[selected_points_agent[i]] - coefs_edge @ lambi 
+        b = np.transpose(Kim) @ y[selected_points_agent[i]]
+        for j in range(a):
+            if adj_matrix[i, j] != 0:
+                if i > j:
+                    b-= lamb[i, j, :]
+                else:
+                    b+= lamb[j, i, :]
         alpha.append(np.linalg.solve(A, b))
     return np.array(alpha)
 
@@ -55,24 +30,24 @@ def dualDec(x, y, selected_points, selected_points_agent, K, sigma, mu, lr, W, m
     a = len(selected_points_agent)
     for i in range(a):
         graph[i, i] = 0
-    lambda_ij = lamb0*np.ones((a, a, m))
+    lambda_ij = lamb0*np.ones((a, a, m)) # should be shape number of edges in communication graph
     alpha_mean_list = []
     alpha_list_agent = []
-    A = search_A(W)
     for n_iter in tqdm(range(max_iter)):
         # Calcul de x_i_star pour tous les noeuds
         alpha_optim = np.zeros((a,m))
-        for agent in range(a): 
-            alpha_optim[agent, : ] = solve_alpha_dualdec(
-                x, y, selected_points, selected_points_agent, sigma, mu,
-                K, graph, lambda_ij[agent, : , : ])
+        # for agent in range(a): 
+        alpha_optim = solve_alpha_dualdec(
+            x, y, selected_points, selected_points_agent, sigma, mu,
+            K, graph, lambda_ij)
         for i in range(a):
             for j in range(i):
                 lambda_ij[i, j, : ] += lr * (alpha_optim[i, :] - alpha_optim[j, :])
-        
-        # f_res.append(f_a(x_star.mean(axis=0),A,sigma,K_mm,K_im,N,y))
         alpha_mean_list.append(alpha_optim.mean(axis=0))
         alpha_list_agent.append(alpha_optim)
+    
+    alpha_optim = alpha_optim.reshape(a, m)
+    alpha_optim = np.mean(alpha_optim, axis=0)
 
     return alpha_optim, alpha_list_agent, alpha_mean_list
 
@@ -98,25 +73,75 @@ if __name__ == "__main__":
     print(f'Points per agent : {n/a}\n')
 
     sigma=0.5
-    mu=1
+    mu=0.1
 
-    adj_matrix = np.array([[1/3, 1/3, 0, 0, 1/3],
-                  [1/3, 1/3, 1/3, 0, 0],
-                  [0, 1/3, 1/3, 1/3, 0],
-                  [0, 0, 1/3, 1/3, 1/3],
-                  [1/3, 0, 0, 1/3, 1/3]])
-    adj_matrix *= 3.0
+    # Compute the alpha optimal
+    print("Compute the alpha optimal....")
+    start = time.time()
+    alpha_optim = compute_alpha(x, y, x_selected, sigma)
+    end = time.time()
+    print(f'Time to compute alpha optimal : {end - start}\n')
+    # # Export alpha optimal to a file
+    # with open('alpha_optim.pkl', 'wb') as f:
+    #     pickle.dump(alpha_optim, f)
+    print(f'alpha optimal : {alpha_optim}\n')
+    # create the weight matrix
+    ind = [(0,1), (1,2), (2,3), (3,4), (4,0)]
+    W = create_W(ind, 5, auto=False)
+    print(W)
+    visual_graph(ind)
+    # W = np.array([[1/3, 1/3, 0, 0, 1/3],
+    #               [1/3, 1/3, 1/3, 0, 0],
+    #               [0, 1/3, 1/3, 1/3, 0],
+    #               [0, 0, 1/3, 1/3, 1/3],
+    #               [1/3, 0, 0, 1/3, 1/3]])
+    print("TEST MATRICE DOUBLE STO : ", is_double_sto(W))
 
-    # lamb is matrix shape (a, a)
-    lamb = np.zeros((a, a))
-    alphatest = solve_alpha_dualdec(
-        x, y, selected_points, selected_points_agents, sigma, mu,
-        K, adj_matrix, lamb)
-    print(alphatest.shape)
-
-    dualDec(
+    # Compute the alpha optimal with the dual decomposition algorithm
+    alpha_optim, alpha_list, alpha_mean_list = dualDec(
         x, y, selected_points, selected_points_agents,
-        K, sigma, mu, 0.1, adj_matrix, max_iter=1000, lamb0=0
+        K, sigma, mu, 0.01, W, max_iter=1000, lamb0=0.
     )
 
-    
+    end = time.time()
+    print(f'alpha optimal with dual decomposition : {alpha_optim}')
+    print(
+        f'Time to compute alpha optimal with dual decomposition : {end - start}')
+    # print(f'Total iterations : {tot_ite}\n')
+
+    # Data visualization
+    Y = np.linalg.norm(alpha_list - alpha_optim, axis=1)
+    # unpack the list of alpha to get for each agent the evolution of alpha
+    agent_1 = np.linalg.norm(np.array(
+        [alpha_list[i][0] for i in range(len(alpha_list))]) - alpha_optim, axis=1)
+    agent_2 = np.linalg.norm(np.array(
+        [alpha_list[i][1] for i in range(len(alpha_list))]) - alpha_optim, axis=1)
+    agent_3 = np.linalg.norm(np.array(
+        [alpha_list[i][2] for i in range(len(alpha_list))]) - alpha_optim, axis=1)
+    agent_4 = np.linalg.norm(np.array(
+        [alpha_list[i][3] for i in range(len(alpha_list))]) - alpha_optim, axis=1)
+    agent_5 = np.linalg.norm(np.array(
+        [alpha_list[i][4] for i in range(len(alpha_list))]) - alpha_optim, axis=1)
+
+    plt.plot(agent_1, label='Agent 1', color='blue')
+    plt.plot(agent_2, label='Agent 2', color='red')
+    plt.plot(agent_3, label='Agent 3', color='green')
+    plt.plot(agent_4, label='Agent 4', color='orange')
+    plt.plot(agent_5, label='Agent 5', color='purple')
+    plt.xlabel('Iterations')
+    plt.ylabel('Optimality gap (norm)')
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.grid()
+    plt.show()
+    # Plot selected points and the prediction of the model with the alpha optimal 
+    plt.figure(0)
+    plt.plot(x[0:n], y[0:n], 'o', label='Data')
+    x_predict = np.linspace(-1, 1, 250)
+    K_f = kernel_matrix(x_predict, x_selected)
+    # fx_predict = get_Kij(range(n), selected_points, K) @ alpha_optim_gt
+    fx_predict = K_f @ alpha_optim
+    plt.plot(x_predict, fx_predict, label='Prediction')
+    plt.grid()
+    plt.legend()
+    plt.show()
