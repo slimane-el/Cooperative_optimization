@@ -6,7 +6,45 @@ from utils import *
 # ADMM Distributed Algorithm
 
 
-def compute_alpha_admm(x, y, selected_points, selected_points_agent, sigma, mu, K, lamb, z, Beta, adj_matrix, l):
+def visualize_predict(alpha_list, alpha_optim, agent_x, agent_y, x_selected, y_selected, x, y):
+    # Data visualization
+    Y = np.linalg.norm(alpha_list - alpha_optim, axis=1)
+    # unpack the list of alpha to get for each agent the evolution of alpha
+    agent_1 = np.linalg.norm(np.array(
+        [alpha_list[i][0] for i in range(len(alpha_list))]) - alpha_optim, axis=1)
+    agent_2 = np.linalg.norm(np.array(
+        [alpha_list[i][1] for i in range(len(alpha_list))]) - alpha_optim, axis=1)
+    agent_3 = np.linalg.norm(np.array(
+        [alpha_list[i][2] for i in range(len(alpha_list))]) - alpha_optim, axis=1)
+    agent_4 = np.linalg.norm(np.array(
+        [alpha_list[i][3] for i in range(len(alpha_list))]) - alpha_optim, axis=1)
+    agent_5 = np.linalg.norm(np.array(
+        [alpha_list[i][4] for i in range(len(alpha_list))]) - alpha_optim, axis=1)
+    plt.plot(agent_1, label='Agent 1', color='blue')
+    plt.plot(agent_2, label='Agent 2', color='red')
+    plt.plot(agent_3, label='Agent 3', color='green')
+    plt.plot(agent_4, label='Agent 4', color='orange')
+    plt.plot(agent_5, label='Agent 5', color='purple')
+    plt.xlabel('Iterations')
+    plt.ylabel('Optimality gap (norm)')
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.grid()
+    plt.show()
+    # Plot selected points and the prediction of the model with the alpha optimal
+    plt.figure(0)
+    for i in range(a):
+        plt.plot(agent_x[i], agent_y[i], 'o', label=f'Agent {i+1}')
+    x_predict = np.linspace(-1, 1, 250)
+    K_f = kernel_matrix(x_predict, x_selected)
+    fx_predict = K_f @ alpha_optim
+    plt.plot(x_predict, fx_predict, label='Prediction')
+    plt.grid()
+    plt.legend()
+    plt.show()
+
+
+def compute_alpha_admm(x, y, selected_points, selected_points_agent, sigma, mu, K, z, lamb, Beta, adj_matrix, l):
     n = len(x)
     a = adj_matrix.shape[0]
     m = len(selected_points)
@@ -15,10 +53,10 @@ def compute_alpha_admm(x, y, selected_points, selected_points_agent, sigma, mu, 
     A = sigma**2 * Kmm/5 + np.eye(m)*mu/5 + np.transpose(Kim) @ Kim
     b = np.transpose(Kim) @ y[selected_points_agent]
     for j in range(a):
-        if adj_matrix[l, j] != 0 and l != j:
+        if adj_matrix[l, j] != 0:
             A += Beta * np.eye(m)
-            b += Beta * z[l, j, :] - lamb[l, j, :]
-    return (np.linalg.solve(A, b))
+            b += Beta*z[l, j, :] - lamb[l, j, :]
+    return np.linalg.solve(A, b)
 
 
 def ADMM(mu, sigma, adjacency_matrix, y, x, selected_points, selected_points_agent, K, Beta, n_iter):
@@ -33,14 +71,13 @@ def ADMM(mu, sigma, adjacency_matrix, y, x, selected_points, selected_points_age
     for k in range(n_iter):
         for i in range(a):
             alpha[i] = compute_alpha_admm(x, y, selected_points, selected_points_agent[i],
-                                          sigma, mu, K, lamb, z, Beta, adjacency_matrix, i)
+                                          sigma, mu, K, z, lamb, Beta, adjacency_matrix, i)
         for i in range(a):
             for j in range(a):
-                if adjacency_matrix[i, j] > 0:
-                    z[i, j, :] = (alpha[i] - alpha[j])/2 + \
-                        (lamb[i, j, :]+lamb[j, i, :])/(2*Beta)
-                    lamb[i, j, :] = lamb[i, j, :] + \
-                        Beta * (alpha[i] - z[i, j, :])
+                z[i, j, :] = (alpha[i] + alpha[j])/2
+        for i in range(a):
+            for j in range(a):
+                lamb[i, j, :] += Beta * (alpha[i]-z[i, j, :])
         # print(lamb)
         list_alpha.append(alpha)
     return (alpha, list_alpha)
@@ -72,7 +109,7 @@ if __name__ == "__main__":
     # Compute the alpha optimal
     print("Compute the alpha optimal....")
     start = time.time()
-    alpha_optimal = compute_alpha(x, y, x_selected, sigma)
+    alpha_optimal = compute_alpha(x, y, x_selected, sigma, mu)
     end = time.time()
     print(f'Time to compute alpha optimal : {end - start}\n')
     # # Export alpha optimal to a file
@@ -92,7 +129,7 @@ if __name__ == "__main__":
     print("TEST MATRICE DOUBLE STO : ", is_double_sto(W))
     # Compute the alpha optimal with the dual decomposition algorithm
     start = time.time()
-    Beta = 0.2
+    Beta = 1
     n_iter = 10000
     alpha_optim, alpha_list_agent = ADMM(
         mu, sigma, W, y, x, selected_points, selected_points_agents, K, Beta, n_iter)
@@ -100,3 +137,7 @@ if __name__ == "__main__":
     print(f'Time to compute alpha optimal with ADMM : {end - start}\n')
     print(f'alpha optimal : {alpha_optimal}\n')
     print(f'alpha optimal using ADMM : {np.mean(alpha_optim,axis=0)}\n')
+
+    # visualize the convergencce of the solution
+    visualize_predict(alpha_list_agent, np.mean(alpha_optim, axis=0), agent_x,
+                      agent_y, x_selected, y_selected, x, y)
