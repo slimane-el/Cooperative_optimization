@@ -42,7 +42,7 @@ def fedAvg(X, Y, x_m_points, T, E, K, Kim, sigma, mu, lr):
             grad = grad_alpha_fedavg(sigma, mu, Y, alpha_agents, K, Kim, a, m)
             # for each agent i=1, .., a
             for i in range(a):
-                alpha_agents[i] = alpha_agents[i] + lr * grad[i]
+                alpha_agents[i] = alpha_agents[i] - lr * grad[i]
         # Server update
         for i in range(a):
             # normalizing 
