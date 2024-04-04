@@ -109,7 +109,7 @@ if __name__ == "__main__":
     # Compute the alpha optimal
     print("Compute the alpha optimal....")
     start = time.time()
-    alpha_optimal = compute_alpha(x, y, x_selected, sigma)
+    alpha_optimal = compute_alpha(x, y, x_selected, sigma, mu)
     end = time.time()
     print(f'Time to compute alpha optimal : {end - start}\n')
     # # Export alpha optimal to a file
@@ -130,10 +130,14 @@ if __name__ == "__main__":
     # Compute the alpha optimal with the dual decomposition algorithm
     start = time.time()
     Beta = 1
-    n_iter = 50000
+    n_iter = 10000
     alpha_optim, alpha_list_agent = ADMM(
         mu, sigma, W, y, x, selected_points, selected_points_agents, K, Beta, n_iter)
     end = time.time()
     print(f'Time to compute alpha optimal with ADMM : {end - start}\n')
     print(f'alpha optimal : {alpha_optimal}\n')
     print(f'alpha optimal using ADMM : {np.mean(alpha_optim,axis=0)}\n')
+
+    # visualize the convergencce of the solution
+    visualize_predict(alpha_list_agent, np.mean(alpha_optim, axis=0), agent_x,
+                      agent_y, x_selected, y_selected, x, y)
