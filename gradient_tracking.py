@@ -72,7 +72,7 @@ if __name__ == "__main__":
     print("Compute the alpha optimal....")
     sigma = 0.5
     start = time.time()
-    alpha_optim = compute_alpha(x, y, x_selected, sigma)
+    alpha_optim = compute_alpha(x, y, x_selected, sigma, mu)
     end = time.time()
     print(f'Time to compute alpha optimal : {end - start}\n')
     # # Export alpha optimal to a file
