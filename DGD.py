@@ -27,23 +27,26 @@ def DGD_revisited(mu, sigma, a, adjacency_matrix, y_agent, x_agent, x_selected, 
     return optimal_gap
 
 
-def DGD_revisited_v2(mu, sigma, adjacency_matrix, y, x, selected_points, selected_points_agent, K, lr):
+def DGD_revisited_v2(mu, sigma, adjacency_matrix, y, x, selected_points, selected_points_agent, K, lr, max_iter):
     # stacked points
     a = len(selected_points_agent)
     n = len(selected_points)
     alpha = np.zeros((a, n))
     # initial alpha
     alpha = alpha.reshape(a*n, 1)
-    W = 1/(a)*(adjacency_matrix)  # define the weight matrix
+    W = (adjacency_matrix)  # define the weight matrix
     # define the kronecker product of the weight matrix
     W_bar = np.kron(W, np.eye(n))
-    j = 0
-    while j < 5000:
-        j += 1
+    list_alpha = [alpha]
+    for n_iter in (range(max_iter)):
         g = grad_alpha_v3(sigma, mu, x, y, alpha.reshape(
             a, n), K, selected_points, selected_points_agent)
         alpha = W_bar @ alpha - lr * np.array(g).reshape(a*n, 1)
-    return alpha
+        list_alpha.append(alpha.reshape(a, n))
+    alpha = alpha.reshape(a, n)
+    alpha = np.mean(alpha, axis=0)
+    print("here a zbi", alpha.shape)
+    return (alpha, list_alpha)
 
 
 def DGD_DP(mu, sigma, adjacency_matrix, y, x, selected_points, selected_points_agent, K, lr):
