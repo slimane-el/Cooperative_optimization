@@ -67,11 +67,20 @@ if __name__=="__main__":
         X, Y = pickle.load(f)
     X = np.array(X)
     Y = np.array(Y)
-    print(X)
-    print(Y)
     print("X shape : ", X.shape)
     print("Y shape : ", Y.shape)
     x_m_points=np.linspace(-1,1,m)
+
+    sigma = 0.5
+    mu = 10
+
+    # Compute the alpha optimal
+    print("Compute the alpha optimal....")
+    start = time.time()
+    alpha_optim = compute_alpha(X.reshape(len(X)*X.shape[1]), Y.reshape(len(Y)*Y.shape[1]), x_m_points, sigma, mu)
+    end = time.time()
+    print(f'Time to compute alpha optimal : {end - start}\n')
+    print(f'alpha optimal : {alpha_optim}\n')
 
     K = kernel_matrix(x_m_points, x_m_points)
     Kim = []
@@ -80,14 +89,12 @@ if __name__=="__main__":
     print("K shape : ", K.shape)   
     print("Kim shape : ", Kim[0].shape)
 
-    T = 100
+    T = 10
     E = 50
-    sigma = 0.5
-    mu = 0.1
-    lr = 0.001
-    alpha_server, alpha_agents = fedAvg(X, Y, x_m_points, T, E, K, Kim, sigma, mu, lr)
+    lr = 1e-8
+    alpha_server, alpha_agents, alpha_list_agents, alpha_list_server = fedAvg(X, Y, x_m_points, T, E, K, Kim, sigma, mu, lr)
     print("Alpha server : ", alpha_server)
-    print("Alpha agents : ", alpha_agents)
+    # print("Alpha agents : ", alpha_agents)
 
     # Data visualization
     # Y = np.linalg.norm(alpha_list - alpha_optim, axis=1)
